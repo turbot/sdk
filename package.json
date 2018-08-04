@@ -3,6 +3,27 @@
   "author": "Turbot HQ, Inc",
   "version": "4.0.0-alpha.1",
   "private": true,
+  "eslintConfig": {
+    "extends": [
+      "plugin:prettier/recommended",
+      "eslint:recommended",
+      "plugin:you-dont-need-lodash-underscore/compatible"
+    ],
+    "env": {
+      "es6": true,
+      "node": true,
+      "mocha": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 8
+    },
+    "rules": {
+      "no-console": "off"
+    }
+  },
+  "prettier": {
+    "printWidth": 120
+  },
   "scripts": {
     "test": "nyc mocha"
   },
