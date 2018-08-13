@@ -1,4 +1,18 @@
+const _ = require("lodash");
+
 class Turbot {
+  // TODO
+  // Logging level in opts - don't log if lower than that.
+  // initialize
+  // finalize
+  // send results to S3 / SNS / ?
+  // database connection & query
+  // get install / env / tenant & function from event
+  // parameter loading
+  // Log basics about the function start / stop / tenant / etc
+  // Use memory cache with configurable cache expiration
+  // data key and decryption / aws credentials
+
   constructor(meta = {}) {
     this.meta = meta;
     this.logEntries = [];
@@ -6,7 +20,90 @@ class Turbot {
 
     // Do we need commands AND actions?
     this.commands = [];
-    // this.actions = [];
+  }
+
+  /**
+   * 13/08 - This class was merged from two different modules sdk-control and a Turbot class
+   * inside the function module. It's a bit messy for now while I'm trying to get it to work.
+   *
+   * Check if the 'action' is needed?
+   */
+  initializeForEvent(event) {
+    console.log("initializeForEvent called with event", event);
+    this._status = null;
+    this._log = [];
+    this._actions = [];
+
+    const command = _.get(event, "command");
+    if (command) {
+      this._action = command;
+    }
+
+    this._envId = _.get(event, "command.payload.envId", null);
+    if (!this._envId) {
+      this._envId = _.get(event, "command.meta.envId", null);
+    }
+
+    this._tenantId = _.get(event, "command.payload.tenantId", null);
+    if (!this._tenantId) {
+      this._tenantId = _.get(event, "command.meta.tenantId", null);
+    }
+
+    this._trace = _.get(event, "command.meta.trace", false);
+
+    if (!event || !event.turbot) {
+      return this;
+    }
+    if (event.turbot.env) {
+      this._envId = event.turbot.env.id;
+    }
+    if (event.turbot.tenant) {
+      this._tenantId = event.turbot.tenant.id;
+    }
+  }
+
+  /**
+   * Finalize function.
+   *
+   * @param {function} callback
+   */
+  finalize(callback) {
+    return (err, results) => {
+      if (err) {
+        this.error("ERROR in function for ENV " + this.envId + " / TENANT " + this.tenantId, err);
+      }
+
+      // Raise all actions and log all log entries
+      // console.log("FINALIZER - status: ", this.status);
+      console.log("FINALIZER - logs: ", this._log);
+      // console.log("FINALIZER - actions: ", this._actions);
+      callback(err, results);
+    };
+  }
+
+  //
+  // Environment
+  //
+  // TODO: 13/08 should we split this functionality?
+  //
+  get envId() {
+    return this._envId;
+  }
+
+  set envId(id) {
+    this._envId = id;
+  }
+
+  get tenantId() {
+    return this._tenantId;
+  }
+
+  set tenantId(id) {
+    this._tenantId = id;
+  }
+
+  get trace() {
+    return this._trace;
   }
 
   //
