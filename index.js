@@ -306,8 +306,9 @@ class Turbot {
   get resource() {
     var self = this;
     return {
-      create: function(resourceId, resourceTypeAka, data) {
-        if (!data) {
+      create: function(resourceId, resourceTypeAka, data, inputMeta = null) {
+        if (!inputMeta) {
+          inputMeta = data;
           data = resourceTypeAka;
           resourceTypeAka = resourceId;
           resourceId = null;
@@ -322,6 +323,7 @@ class Turbot {
         if (data) {
           command.payload = data;
         }
+        _.defaults(command.meta, inputMeta);
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
         self._command(command);
@@ -331,24 +333,25 @@ class Turbot {
       /**
        * resourceId: parent
        */
-      upsert: function(resourceId, resourceTypeAka, akas, data, metadata) {
-        if (!metadata) {
-          metadata = data;
+      upsert: function(resourceId, resourceTypeAka, data, inputMeta = null) {
+        if (!inputMeta) {
+          inputMeta = data;
           data = resourceTypeAka;
           resourceTypeAka = resourceId;
           resourceId = null;
         }
+
         const command = {
           type: "resource_upsert",
           meta: {
             parentId: resourceId || self.meta.resourceId,
-            type: resourceTypeAka,
-            akas: akas
+            type: resourceTypeAka
           }
         };
         if (data) {
           command.payload = data;
         }
+        _.defaults(command.meta, inputMeta);
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
         self._command(command);
