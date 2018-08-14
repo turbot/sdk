@@ -533,12 +533,13 @@ class Turbot {
       }
     }
 
+    // TODO: change this to capitalise the first letter
     // Create a process event (update, terminate) wrapping all of the outcomes from the inline run.
     if (this.process && this.process.state) {
-      event.type = "process_" + this.process.state;
+      event.type = "process.turbot.com:" + this.process.state;
     } else {
       // By default, it's just an update to the existing process.
-      event.type = "process_update";
+      event.type = "process.turbot.com:update";
     }
 
     if (Object.keys(payload).length > 0) {
