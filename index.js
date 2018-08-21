@@ -187,7 +187,7 @@ class Turbot {
   }
 
   //
-  // STATE MANAGEMENT
+  // STATE MANAGEMENT FOR CONTROLS
   //
 
   _state(state, controlId, reason, data) {
@@ -207,7 +207,7 @@ class Turbot {
     if (data) {
       newState.data = data;
     }
-    this.log.info(`Update state: ${newState.state}.`, newState);
+    this.log.info(`Update control state: ${newState.state}.`, newState);
     this._command({
       type: "control_update",
       meta: { controlId },
@@ -254,6 +254,64 @@ class Turbot {
   insufficient_data(controlId, reason, data) {
     return this._stateStager("insufficient_data", controlId, reason, data);
   }
+
+  //
+  // STATE MANAGEMENT FOR ACTIONS
+  //
+
+  _actionState(state, actionId, reason, data) {
+    if (!actionId) {
+      actionId = this.meta.actionId;
+    }
+    let newState = { state, timestamp: new Date() };
+    // Support the case where they pass in an object for data, but no reason.
+    if (!data && typeof reason != "string") {
+      data = reason;
+      reason = null;
+    }
+    if (reason) {
+      newState.reason = reason;
+    }
+    // TODO - sanitize?
+    if (data) {
+      newState.data = data;
+    }
+    this.log.info(`Update action state: ${newState.state}.`, newState);
+    this._command({
+      type: "action_update",
+      meta: { actionId },
+      payload: newState
+    });
+    return this;
+  }
+
+  _actionStateStager(state, arg1, arg2, arg3) {
+    var actionId, reason, data;
+    if (/\d+/.test(arg1)) {
+      actionId = arg1;
+      if (typeof arg2 == "string") {
+        reason = arg2;
+        data = arg3;
+      } else {
+        data = arg2;
+      }
+    } else if (typeof arg1 == "string") {
+      reason = arg1;
+      data = arg2;
+    } else {
+      data = arg1;
+    }
+    return this._state(state, actionId, reason, data);
+  }
+
+  succeed(actionId, reason, data) {
+    return this._actionStateStager("succeed", actionId, reason, data);
+  }
+
+  fail(actionId, reason, data) {
+    return this._actionStateStager("fail", actionId, reason, data);
+  }
+
 
   //
   // NOTIFICATIONS
