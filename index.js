@@ -255,6 +255,13 @@ class Turbot {
     return this._stateStager("insufficient_data", controlId, reason, data);
   }
 
+  action(actionUri, data) {
+    this._command({
+      type: "run_action",
+      meta: { controlId: this.meta.controlId, actionUri: actionUri },
+      payload: data
+    })
+  }
   //
   // STATE MANAGEMENT FOR ACTIONS
   //
