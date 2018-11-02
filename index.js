@@ -13,13 +13,15 @@ class Turbot {
   // Use memory cache with configurable cache expiration
   // data key and decryption / aws credentials
 
-  constructor(meta = {}) {
+  constructor(meta = {}, opts = {}) {
     this.meta = meta;
     this.logEntries = [];
     this.process = null;
 
-    // Do we need commands AND actions?
     this.commands = [];
+
+    this.opts = _.clone(opts);
+    _.defaults(this.opts, { type: "control" });
   }
 
   /**
@@ -33,10 +35,11 @@ class Turbot {
     this._status = null;
     this._log = [];
     this._actions = [];
+    this._commands = [];
 
     const command = _.get(event, "command");
     if (command) {
-      this._action = command;
+      this._command = command;
     }
 
     this._envId = _.get(event, "command.payload.envId", null);
@@ -190,10 +193,18 @@ class Turbot {
   // STATE MANAGEMENT FOR CONTROLS
   //
 
-  _state(state, controlId, reason, data) {
-    if (!controlId) {
-      controlId = this.meta.controlId;
+  _state(state, runnableId, reason, data) {
+    if (!runnableId) {
+      switch (this.opts.type) {
+        case "action":
+          runnableId = this.meta.actionId;
+          break;
+        case "control":
+        default:
+          runnableId = this.meta.controlId;
+      }
     }
+
     let newState = { state, timestamp: new Date() };
     // Support the case where they pass in an object for data, but no reason.
     if (!data && typeof reason != "string") {
@@ -207,17 +218,21 @@ class Turbot {
     if (data) {
       newState.data = data;
     }
-    this.log.info(`Update control state: ${newState.state}.`, newState);
+    this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
+
+    const meta = {};
+    meta[`${this.opts.type}Id`] = runnableId;
+
     this._command({
-      type: "control_update",
-      meta: { controlId },
+      type: `${this.opts.type}_update`,
+      meta: meta,
       payload: newState
     });
     return this;
   }
 
   _stateStager(state, arg1, arg2, arg3) {
-    var controlId, reason, data;
+    let controlId, reason, data;
     if (/\d+/.test(arg1)) {
       controlId = arg1;
       if (typeof arg2 == "string") {
@@ -255,45 +270,28 @@ class Turbot {
     return this._stateStager("insufficient_data", controlId, reason, data);
   }
 
+  //
+  // Is action just a command? run_action for example?
+  // or is it more of a control but potentially in a different shape
+  //
+  // What is we're running an action as part of a control? Should that be just
+  // a command?
+  //
+  // On the same vein, should we able to run a control by issuing a run_control command?
+  //
   action(actionUri, data) {
     this._command({
       type: "run_action",
       meta: { controlId: this.meta.controlId, actionUri: actionUri },
       payload: data
-    })
+    });
   }
   //
   // STATE MANAGEMENT FOR ACTIONS
   //
 
-  _actionState(state, actionId, reason, data) {
-    if (!actionId) {
-      actionId = this.meta.actionId;
-    }
-    let newState = { state, timestamp: new Date() };
-    // Support the case where they pass in an object for data, but no reason.
-    if (!data && typeof reason != "string") {
-      data = reason;
-      reason = null;
-    }
-    if (reason) {
-      newState.reason = reason;
-    }
-    // TODO - sanitize?
-    if (data) {
-      newState.data = data;
-    }
-    this.log.info(`Update action state: ${newState.state}.`, newState);
-    this._command({
-      type: "action_update",
-      meta: { actionId },
-      payload: newState
-    });
-    return this;
-  }
-
   _actionStateStager(state, arg1, arg2, arg3) {
-    var actionId, reason, data;
+    let actionId, reason, data;
     if (/\d+/.test(arg1)) {
       actionId = arg1;
       if (typeof arg2 == "string") {
@@ -308,6 +306,7 @@ class Turbot {
     } else {
       data = arg1;
     }
+
     return this._state(state, actionId, reason, data);
   }
 
@@ -318,7 +317,6 @@ class Turbot {
   fail(actionId, reason, data) {
     return this._actionStateStager("fail", actionId, reason, data);
   }
-
 
   //
   // NOTIFICATIONS
