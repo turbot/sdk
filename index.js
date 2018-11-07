@@ -149,14 +149,14 @@ class Turbot {
   //
 
   _logger(level, message, data) {
-    var entry = {
+    const entry = {
       timestamp: new Date().toISOString(),
       level: level,
       message: message || ""
     };
-    if (data) {
-      entry.data = data;
-    }
+
+    entry.data = data || {};
+
     // TODO - limit the size / number of possible log entries to prevent flooding
     // TODO - Sanitize output
     this.logEntries.push(entry);
@@ -329,19 +329,42 @@ class Turbot {
       icon = controlId;
       controlId = this.meta.controlId;
     }
-    let command = {
-      type: "control_notify",
+
+    const command = {
+      type: `${this.opts.type}_notify`,
       meta: {
-        controlId
+        // This is the meta for the command itself
       },
       payload: {
-        icon,
-        message
+        data: {
+          icon,
+          message
+        },
+        meta: {
+          // This is the meta of the data that is being saved
+        }
       }
     };
-    if (data) {
-      command.payload.data = data;
+
+    // For this command the meta of the command and the meta of the data
+    // is the same, but may not always be the case
+    switch (this.opts.type) {
+      case "action": {
+        command.meta.actionId = this.meta.actionId;
+        command.payload.meta.actionId = this.meta.actionId;
+        break;
+      }
+      case "control":
+      default: {
+        command.meta.controlId = this.meta.controlId;
+        command.payload.meta.controlId = this.meta.controlId;
+      }
     }
+
+    if (data) {
+      command.payload.data.data = data;
+    }
+
     this._command(command);
     return this;
   }
