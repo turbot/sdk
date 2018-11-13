@@ -279,13 +279,33 @@ class Turbot {
   //
   // On the same vein, should we able to run a control by issuing a run_control command?
   //
-  action(actionUri, data) {
-    this._command({
-      type: "run_action",
-      meta: { controlId: this.meta.controlId, actionUri: actionUri },
-      payload: data
-    });
+
+  get action() {
+    const self = this;
+    return {
+      run: function(actionUri, data) {
+        self._command({
+          type: "action_run",
+          meta: { controlId: this.meta.controlId, actionUri: actionUri },
+          payload: data
+        });
+      }
+    };
   }
+
+  get control() {
+    const self = this;
+    return {
+      run: function(controlUri, data) {
+        self._command({
+          type: "control_run",
+          meta: { controlId: this.meta.controlId, controlUri: controlUri },
+          payload: data
+        });
+      }
+    };
+  }
+
   //
   // STATE MANAGEMENT FOR ACTIONS
   //
@@ -460,8 +480,8 @@ class Turbot {
         return self._resource("update", resourceId, changes);
       },
 
-      delete: function(resourceId) {
-        return self._resource("delete", resourceId);
+      delete: function(resourceId, data) {
+        return self._resource("delete", resourceId, data);
       },
 
       notify: function(resourceId, icon, message, data) {
