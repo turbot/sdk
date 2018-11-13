@@ -286,7 +286,7 @@ class Turbot {
       run: function(actionUri, data) {
         self._command({
           type: "action_run",
-          meta: { controlId: this.meta.controlId, actionUri: actionUri },
+          meta: { controlId: self.meta.controlId, actionUri: actionUri },
           payload: data
         });
       }
@@ -299,7 +299,7 @@ class Turbot {
       run: function(controlUri, data) {
         self._command({
           type: "control_run",
-          meta: { controlId: this.meta.controlId, controlUri: controlUri },
+          meta: { controlId: self.meta.controlId, controlUri: controlUri },
           payload: data
         });
       }
