@@ -199,6 +199,12 @@ class Turbot {
         case "action":
           runnableId = this.meta.actionId;
           break;
+        case "policy":
+          runnableId = this.meta.policyId;
+          break;
+        case "report":
+          runnableId = this.meta.reportId;
+          break;
         case "control":
         default:
           runnableId = this.meta.controlId;
@@ -582,6 +588,45 @@ class Turbot {
         self.log.info(msg);
         self._command(command);
         return self;
+      },
+
+      // policy state functions
+      ok: function(value) {
+        return self._stateStager("ok", { value });
+      },
+
+      tbd: function(reason, data) {
+        return self._stateStager("tbd", reason, data);
+      },
+
+      invalid: function(reason, data) {
+        return self._stateStager("invalid", reason, data);
+      },
+
+      error: function(reason, data) {
+        return self._stateStager("error", reason, data);
+      }
+    };
+  }
+
+  get report() {
+    const self = this;
+    return {
+      // report state functions
+      ok: function(value) {
+        return self._stateStager("ok", { value });
+      },
+
+      tbd: function(reason, data) {
+        return self._stateStager("tbd", reason, data);
+      },
+
+      invalid: function(reason, data) {
+        return self._stateStager("invalid", reason, data);
+      },
+
+      error: function(reason, data) {
+        return self._stateStager("error", reason, data);
       }
     };
   }
