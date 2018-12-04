@@ -276,6 +276,14 @@ class Turbot {
     return this._stateStager("insufficient_data", controlId, reason, data);
   }
 
+  invalid(controlId, reason, data) {
+    return this._stateStager("invalid", controlId, reason, data);
+  }
+
+  tbd(controlId, reason, data) {
+    return this._stateStager("tbd", controlId, reason, data);
+  }
+
   //
   // Is action just a command? run_action for example?
   // or is it more of a control but potentially in a different shape
