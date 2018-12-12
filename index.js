@@ -495,6 +495,10 @@ class Turbot {
       },
 
       delete: function(resourceId, data) {
+        if (!data) {
+          data = resourceId;
+          resourceId = null;
+        }
         return self._resource("delete", resourceId, data);
       },
 
