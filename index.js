@@ -155,7 +155,8 @@ class Turbot {
       message: message || ""
     };
 
-    entry.data = data || {};
+    // use explicit undefined check rather than truthiness check as we want to allow zero/false values through
+    entry.data = typeof data == "undefined" ? {} : data;
 
     // TODO - limit the size / number of possible log entries to prevent flooding
     // TODO - Sanitize output
