@@ -495,12 +495,8 @@ class Turbot {
         return self._resource("update", resourceId, changes);
       },
 
-      delete: function(resourceId, data) {
-        if (!data) {
-          data = resourceId;
-          resourceId = null;
-        }
-        return self._resource("delete", resourceId, data);
+      delete: function(resourceId) {
+        return self._resource("delete", resourceId);
       },
 
       notify: function(resourceId, icon, message, data) {
