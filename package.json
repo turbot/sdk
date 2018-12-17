@@ -16,5 +16,8 @@
     "mocha": "5.2.0",
     "nyc": "13.0.1",
     "prettier": "1.14.2"
+  },
+  "dependencies": {
+    "serialize-error": "3.0.0"
   }
 }

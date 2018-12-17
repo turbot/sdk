@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const serializeError = require("serialize-error");
 
 class Turbot {
   // TODO
@@ -31,7 +32,6 @@ class Turbot {
    * Check if the 'action' is needed?
    */
   initializeForEvent(event) {
-    console.log("initializeForEvent called with event", event);
     this._status = null;
     this._log = [];
     this._actions = [];
@@ -78,7 +78,7 @@ class Turbot {
 
       // Raise all actions and log all log entries
       // console.log("FINALIZER - status: ", this.status);
-      console.log("FINALIZER - logs: ", this._log);
+      // console.log("FINALIZER - logs: ", this._log);
       // console.log("FINALIZER - actions: ", this._actions);
       callback(err, results);
     };
@@ -169,7 +169,7 @@ class Turbot {
     return {
       // NOTE: Turbot log levels (e.g. emergency, etc) are not available to controls.
       error: function(message, data) {
-        return self._logger("error", message, data);
+        return self._logger("error", message, serializeError(data));
       },
 
       warning: function(message, data) {
@@ -270,7 +270,7 @@ class Turbot {
   }
 
   error(controlId, reason, data) {
-    return this._stateStager("error", controlId, reason, data);
+    return this._stateStager("error", controlId, reason, serializeError(data));
   }
 
   insufficient_data(controlId, reason, data) {
