@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const serializeError = require("serialize-error");
+const utils = require("@turbot/utils");
 
 class Turbot {
   // TODO
@@ -149,6 +149,13 @@ class Turbot {
   //
 
   _logger(level, message, data) {
+    // If we only pass 2 parameters and the the message is passed as the error object for example
+    // message will be "" and we get the object within the 'data' field
+    if (!data && "object" === typeof message) {
+      data = message;
+      message = null;
+    }
+
     const entry = {
       timestamp: new Date().toISOString(),
       level: level,
@@ -156,11 +163,14 @@ class Turbot {
     };
 
     // use explicit undefined check rather than truthiness check as we want to allow zero/false values through
-    entry.data = typeof data == "undefined" ? {} : data;
+    entry.data = typeof data === "undefined" ? {} : data;
+
+    const logEntry = utils.data.sanitize(entry, {
+      breakCircular: true
+    });
 
     // TODO - limit the size / number of possible log entries to prevent flooding
-    // TODO - Sanitize output
-    this.logEntries.push(entry);
+    this.logEntries.push(logEntry);
     return this;
   }
 
@@ -169,7 +179,7 @@ class Turbot {
     return {
       // NOTE: Turbot log levels (e.g. emergency, etc) are not available to controls.
       error: function(message, data) {
-        return self._logger("error", message, serializeError(data));
+        return self._logger("error", message, data);
       },
 
       warning: function(message, data) {
@@ -270,7 +280,7 @@ class Turbot {
   }
 
   error(controlId, reason, data) {
-    return this._stateStager("error", controlId, reason, serializeError(data));
+    return this._stateStager("error", controlId, reason, data);
   }
 
   insufficient_data(controlId, reason, data) {

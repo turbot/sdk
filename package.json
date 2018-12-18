@@ -18,6 +18,6 @@
     "prettier": "1.14.2"
   },
   "dependencies": {
-    "serialize-error": "3.0.0"
+    "@turbot/utils": "git+ssh://git@github.com:turbotio/utils.git"
   }
 }
