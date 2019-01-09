@@ -335,32 +335,20 @@ class Turbot {
   // STATE MANAGEMENT FOR ACTIONS
   //
 
-  _actionStateStager(state, arg1, arg2, arg3) {
-    let actionId, reason, data;
-    if (/\d+/.test(arg1)) {
-      actionId = arg1;
-      if (typeof arg2 == "string") {
-        reason = arg2;
-        data = arg3;
-      } else {
-        data = arg2;
-      }
-    } else if (typeof arg1 == "string") {
-      reason = arg1;
-      data = arg2;
-    } else {
-      data = arg1;
-    }
-
-    return this._state(state, actionId, reason, data);
-  }
-
+  /***
+   * @deprecated Please use OK. Will be removed hopefully sometime end of Jan 2019.
+   */
   succeed(actionId, reason, data) {
-    return this._actionStateStager("succeed", actionId, reason, data);
+    //return this._actionStateStager("succeed", actionId, reason, data);
+    return this._stateStager("ok", actionId, reason, data);
   }
 
+  /***
+   * @deprecated Please use Error. Will be removed hopefully sometime end of Jan 2019.
+   */
   fail(actionId, reason, data) {
-    return this._actionStateStager("fail", actionId, reason, data);
+    //return this._actionStateStager("fail", actionId, reason, data);
+    return this._stateStager("error", actionId, reason, data);
   }
 
   //
