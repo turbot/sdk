@@ -310,9 +310,13 @@ class Turbot {
     return {
       run: function(actionUri, data) {
         // TODO: the actionUri should be in the payload not meta. See how the control.run is done
+        const meta = { controlId: self.meta.controlId, actionUri: actionUri };
+        if (self.meta.pid) {
+          meta.parentProcessId = self.meta.pid;
+        }
         self._command({
           type: "action_run",
-          meta: { controlId: self.meta.controlId, actionUri: actionUri, parentProcessId: self.meta.pid },
+          meta: meta,
           payload: data
         });
       }
@@ -330,9 +334,13 @@ class Turbot {
           data: data
         };
 
+        const commandMeta = { controlId: self.meta.controlId, actionId: self.meta.actionId };
+        if (self.meta.pid) {
+          commandMeta.parentProcessId = self.meta.pid;
+        }
         self._command({
           type: "control_run",
-          meta: { controlId: self.meta.controlId, actionId: self.meta.actionId, parentProcessId: self.meta.pid },
+          meta: commandMeta,
           payload: payload
         });
       }
