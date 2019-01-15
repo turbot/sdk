@@ -232,10 +232,6 @@ class Turbot {
     if (reason) {
       newState.reason = reason;
     }
-    // TODO - sanitize?
-    if (data) {
-      newState.data = data;
-    }
     this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
 
     switch (this.opts.type) {
@@ -243,9 +239,17 @@ class Turbot {
       case "report":
       case "control":
         meta[`${this.opts.type}Id`] = runnableId;
+        // TODO - sanitize?
+        if (data) {
+          newState.data = data;
+        }
         break;
       case "policy":
         meta.policyValueId = runnableId;
+        // TODO - sanitize?
+        if (data) {
+          newState.value = data;
+        }
         break;
       default:
         meta[`${this.opts.type}Id`] = runnableId;
