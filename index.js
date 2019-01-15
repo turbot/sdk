@@ -211,7 +211,7 @@ class Turbot {
           runnableId = this.meta.actionId;
           break;
         case "policy":
-          runnableId = this.meta.policyId;
+          runnableId = this.meta.policyValueId;
           break;
         case "report":
           runnableId = this.meta.reportId;
