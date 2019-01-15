@@ -205,6 +205,7 @@ class Turbot {
   //
 
   _state(state, runnableId, reason, data) {
+    const meta = {};
     if (!runnableId) {
       switch (this.opts.type) {
         case "action":
@@ -237,8 +238,18 @@ class Turbot {
     }
     this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
 
-    const meta = {};
-    meta[`${this.opts.type}Id`] = runnableId;
+    switch (this.opts.type) {
+      case "action":
+      case "report":
+      case "control":
+        meta[`${this.opts.type}Id`] = runnableId;
+        break;
+      case "policy":
+        meta.policyValueId = runnableId;
+        break;
+      default:
+        meta[`${this.opts.type}Id`] = runnableId;
+    }
 
     this._command({
       type: `${this.opts.type}_update`,
