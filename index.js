@@ -31,6 +31,12 @@ class Turbot {
 
     this.opts = _.clone(opts);
     _.defaults(this.opts, { type: "control" });
+
+    // Prefer the log level in opts rather than environment variable
+    this.logLevel = opts.logLevel || process.env.TURBOT_LOG_LEVEL;
+    if (!this.logLevel) {
+      this.logLevel = "info";
+    }
   }
 
   /**
@@ -178,7 +184,7 @@ class Turbot {
     });
 
     const stream = LOG_LEVELS[level].value > LOG_LEVELS.error.value ? "error" : "log";
-    if (LOG_LEVELS[level].value >= LOG_LEVELS[process.env.TURBOT_LOG_LEVEL].value) {
+    if (LOG_LEVELS[level].value >= LOG_LEVELS[this.logLevel].value) {
       console[stream](logEntry);
     }
 
