@@ -1,6 +1,14 @@
 const _ = require("lodash");
 const utils = require("@turbot/utils");
 
+const LOG_LEVELS = {
+  debug: 5,
+  info: 4,
+  notice: 3,
+  warning: 2,
+  error: 1
+};
+
 class Turbot {
   // TODO
   // Logging level in opts - don't log if lower than that.
@@ -169,6 +177,11 @@ class Turbot {
       breakCircular: true
     });
 
+    const stream = LOG_LEVELS[level].value > LOG_LEVELS.error.value ? "error" : "log";
+    if (LOG_LEVELS[level].value >= LOG_LEVELS[process.env.TURBOT_LOG_LEVEL].value) {
+      console[stream](logEntry);
+    }
+
     // TODO - limit the size / number of possible log entries to prevent flooding
     this.logEntries.push(logEntry);
     return this;
@@ -308,6 +321,37 @@ class Turbot {
 
   tbd(controlId, reason, data) {
     return this._stateStager("tbd", controlId, reason, data);
+  }
+
+  nextRun(timeStamp) {
+    // The other commands don't clone the meta, should we?
+    const meta = {};
+    switch (this.opts.type) {
+      case "action":
+        meta.actionId = this.meta.actionId;
+        break;
+      case "policy":
+        meta.policyValueId = this.meta.policyValueId;
+        break;
+      case "report":
+        meta.reportId = this.meta.reportId;
+        break;
+      case "control":
+      default:
+        meta.controlId = this.meta.controlId;
+    }
+
+    if (this.meta.pid) {
+      meta.parentProcessId = this.meta.pid;
+    }
+
+    this._command({
+      type: "next_run",
+      meta: meta,
+      payload: {
+        nextRunTimestamp: timeStamp
+      }
+    });
   }
 
   //
