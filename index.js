@@ -183,10 +183,10 @@ class Turbot {
       breakCircular: true
     });
 
-    const stream = LOG_LEVELS[level].value > LOG_LEVELS.error.value ? "error" : "log";
-    if (LOG_LEVELS[level].value >= LOG_LEVELS[this.logLevel].value) {
-      console[stream](logEntry);
-    }
+    // const stream = LOG_LEVELS[level].value > LOG_LEVELS.error.value ? "error" : "log";
+    // if (LOG_LEVELS[level].value >= LOG_LEVELS[this.logLevel].value) {
+    //   console[stream](logEntry);
+    // }
 
     // TODO - limit the size / number of possible log entries to prevent flooding
     this.logEntries.push(logEntry);
