@@ -2,11 +2,11 @@ const _ = require("lodash");
 const utils = require("@turbot/utils");
 
 const LOG_LEVELS = {
-  debug: 5,
-  info: 4,
-  notice: 3,
-  warning: 2,
-  error: 1
+  debug: { value: 5 },
+  info: { value: 4 },
+  notice: { value: 3 },
+  warning: { value: 2 },
+  error: { value: 1 }
 };
 
 class Turbot {
