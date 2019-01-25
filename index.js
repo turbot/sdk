@@ -726,7 +726,7 @@ class Turbot {
   get event() {
     const self = this;
     return {
-      raise: function(aka, eventType, event) {
+      raise: function(aka, eventType, event, opts) {
         const command = {
           type: "event_raise",
           meta: {
@@ -736,6 +736,11 @@ class Turbot {
           },
           payload: event
         };
+
+        if (opts) {
+          _.defaults(command.meta, opts);
+        }
+
         const msg = `Raise event for aka ${aka}.`;
         self.log.info(msg, event);
         self._command(command);
