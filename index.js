@@ -1,13 +1,13 @@
 const _ = require("lodash");
 const utils = require("@turbot/utils");
 
-const LOG_LEVELS = {
-  debug: { value: 5 },
-  info: { value: 4 },
-  notice: { value: 3 },
-  warning: { value: 2 },
-  error: { value: 1 }
-};
+// const LOG_LEVELS = {
+//   debug: { value: 5 },
+//   info: { value: 4 },
+//   notice: { value: 3 },
+//   warning: { value: 2 },
+//   error: { value: 1 }
+// };
 
 class Turbot {
   // TODO
@@ -405,6 +405,46 @@ class Turbot {
         }
         self._command({
           type: "control_run",
+          meta: commandMeta,
+          payload: payload
+        });
+      },
+
+      runNextTimestamp: function(timestamp) {
+        const commandMeta = { controlId: self.meta.controlId };
+        if (self.meta.pid) {
+          commandMeta.parentProcessId = self.meta.pid;
+        }
+
+        const payload = {
+          nextRunTimestamp: timestamp
+        };
+        self._command({
+          type: "control_next_run",
+          meta: commandMeta,
+          payload: payload
+        });
+      },
+
+      /**
+       * Refer to moment's date manipulation for valid string:
+       * https://momentjs.com/docs/#/manipulating/add/
+       *
+       * @param {*} number 1, 2, 3
+       * @param {*} string minutes, hours, years
+       */
+      runNextIn: function(number, string) {
+        const commandMeta = { controlId: self.meta.controlId };
+        if (self.meta.pid) {
+          commandMeta.parentProcessId = self.meta.pid;
+        }
+
+        const payload = {
+          number: number,
+          string: string
+        };
+        self._command({
+          type: "control_next_run",
           meta: commandMeta,
           payload: payload
         });
