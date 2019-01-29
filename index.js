@@ -360,6 +360,46 @@ class Turbot {
     });
   }
 
+  /**
+   * Refer to moment's date manipulation for valid string:
+   * https://momentjs.com/docs/#/manipulating/add/
+   *
+   * @param {*} number 1, 2, 3
+   * @param {*} string minutes, hours, years
+   */
+  nextRunIn(number, string) {
+    // The other commands don't clone the meta, should we?
+    const meta = {};
+    switch (this.opts.type) {
+      case "action":
+        meta.actionId = this.meta.actionId;
+        break;
+      case "policy":
+        meta.policyValueId = this.meta.policyValueId;
+        break;
+      case "report":
+        meta.reportId = this.meta.reportId;
+        break;
+      case "control":
+      default:
+        meta.controlId = this.meta.controlId;
+    }
+
+    if (this.meta.pid) {
+      meta.parentProcessId = this.meta.pid;
+    }
+
+    const payload = {
+      number: number,
+      string: string
+    };
+    this._command({
+      type: "control_next_run",
+      meta: meta,
+      payload: payload
+    });
+  }
+
   //
   // Is action just a command? run_action for example?
   // or is it more of a control but potentially in a different shape
@@ -405,46 +445,6 @@ class Turbot {
         }
         self._command({
           type: "control_run",
-          meta: commandMeta,
-          payload: payload
-        });
-      },
-
-      runNextTimestamp: function(timestamp) {
-        const commandMeta = { controlId: self.meta.controlId };
-        if (self.meta.pid) {
-          commandMeta.parentProcessId = self.meta.pid;
-        }
-
-        const payload = {
-          nextRunTimestamp: timestamp
-        };
-        self._command({
-          type: "control_next_run",
-          meta: commandMeta,
-          payload: payload
-        });
-      },
-
-      /**
-       * Refer to moment's date manipulation for valid string:
-       * https://momentjs.com/docs/#/manipulating/add/
-       *
-       * @param {*} number 1, 2, 3
-       * @param {*} string minutes, hours, years
-       */
-      runNextIn: function(number, string) {
-        const commandMeta = { controlId: self.meta.controlId };
-        if (self.meta.pid) {
-          commandMeta.parentProcessId = self.meta.pid;
-        }
-
-        const payload = {
-          number: number,
-          string: string
-        };
-        self._command({
-          type: "control_next_run",
           meta: commandMeta,
           payload: payload
         });
