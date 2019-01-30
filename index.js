@@ -614,8 +614,13 @@ class Turbot {
         return self._resource("update", resourceId, changes);
       },
 
-      delete: function(resourceId) {
-        return self._resource("delete", resourceId);
+      /**
+       * Delete resource by id or aka.
+       * @param {*} resourceId resource id
+       * @param {*} data If deleting by aka data should be in this format: { akas: [aka]}
+       */
+      delete: function(resourceId, data) {
+        return self._resource("delete", resourceId, data);
       },
 
       notify: function(resourceId, icon, message, data) {
