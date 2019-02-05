@@ -243,15 +243,24 @@ class Turbot {
     }
 
     let newState = { state, timestamp: new Date() };
+
     // Support the case where they pass in an object for data, but no reason.
     if (!data && typeof reason != "string") {
       data = reason;
       reason = null;
     }
+
     if (reason) {
       newState.reason = reason;
+    } else {
+      // This looks rather odd, but don't remove it. This issue is illustrated in
+      // turbot-core/events/test/events.js
+      // Different error has different output behaviour with VM2.
+      if (data && data.stack && data.message && typeof data.stack === "string") {
+        reason = data.name + ": " + data.message;
+        newState.reason = reason;
+      }
     }
-    this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
 
     switch (this.opts.type) {
       case "action":
