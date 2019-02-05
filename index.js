@@ -262,6 +262,8 @@ class Turbot {
       }
     }
 
+    this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
+
     switch (this.opts.type) {
       case "action":
       case "report":
