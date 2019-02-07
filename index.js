@@ -230,6 +230,9 @@ class Turbot {
         case "action":
           runnableId = this.meta.actionId;
           break;
+        case "scheduledAction":
+          runnableId = this.meta.scheduledActionId;
+          break;
         case "policy":
           runnableId = this.meta.policyValueId;
           break;
@@ -266,6 +269,7 @@ class Turbot {
 
     switch (this.opts.type) {
       case "action":
+      case "scheduledAction":
       case "report":
       case "control":
         meta[`${this.opts.type}Id`] = runnableId;
