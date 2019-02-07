@@ -523,6 +523,16 @@ class Turbot {
         command.payload.meta.actionId = this.meta.actionId;
         break;
       }
+      case "scheduledAction": {
+        command.meta.scheduledActionId = this.meta.scheduledActionId;
+        command.payload.meta.scheduledActionId = this.meta.scheduledActionId;
+        break;
+      }
+      case "policy": {
+        command.meta.policyValueId = this.meta.policyValueId;
+        command.payload.meta.policyValueId = this.meta.policyValueId;
+        break;
+      }
       case "control":
       default: {
         command.meta.controlId = this.meta.controlId;
