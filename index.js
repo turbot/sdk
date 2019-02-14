@@ -409,7 +409,7 @@ class Turbot {
       string: string
     };
     this._command({
-      type: "control_next_run",
+      type: "next_run",
       meta: meta,
       payload: payload
     });
