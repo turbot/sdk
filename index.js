@@ -678,8 +678,8 @@ class Turbot {
       },
 
       // policy state functions
-      ok: function(value) {
-        return self._stateStager("ok", { value });
+      ok: function(reason, value) {
+        return self._stateStager("ok", reason, value);
       },
 
       tbd: function(reason, data) {
