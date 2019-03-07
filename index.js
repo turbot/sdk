@@ -310,7 +310,7 @@ class Turbot {
 
   _stateStager(state, arg1, arg2, arg3) {
     let controlId, reason, data;
-    if (/\d+/.test(arg1)) {
+    if (/^\d{15}$/.test(arg1)) {
       controlId = arg1;
       if (typeof arg2 == "string") {
         reason = arg2;
