@@ -247,8 +247,19 @@ class Turbot {
 
     let newState = { state, timestamp: new Date() };
 
+    // If the execution type if policy then we have a slightly different logic
+    // in policy we are more interested with the data, so allow user to
+    // pass turbot.ok({ policy: valueHere });
+    //
+    // For controls we want to be able to say:
+    // turbot.ok('reason here');
+    //
+    if (this.opts.type === "policy" && !data) {
+      data = reason;
+      reason = null;
+    }
     // Support the case where they pass in an object for data, but no reason.
-    if (!data && typeof reason != "string") {
+    else if (!data && typeof reason != "string") {
       data = reason;
       reason = null;
     }
@@ -678,8 +689,8 @@ class Turbot {
       },
 
       // policy state functions
-      ok: function(reason, value) {
-        return self._stateStager("ok", reason, value);
+      ok: function(value) {
+        return self._stateStager("ok", null, value);
       },
 
       tbd: function(reason, data) {
