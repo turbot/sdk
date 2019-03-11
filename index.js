@@ -132,7 +132,7 @@ class Turbot {
       this.log.warning(`Process state previously set to: ${this.process.state}. Resetting.`, this.process);
     }
     this.process = { state, timestamp: new Date() };
-    this.log.info(`Setting process state: ${this.process.state}.`, this.process);
+    this.log.debug(`Setting process state: ${this.process.state}.`, this.process);
   }
 
   update() {
