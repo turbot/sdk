@@ -306,14 +306,12 @@ class Turbot {
       case "report":
       case "control":
         meta[`${this.opts.type}Id`] = runnableId;
-        // TODO - sanitize?
         if (data) {
-          newState.data = data;
+          _.defaults(newState, data);
         }
         break;
       case "policy":
         meta.policyValueId = runnableId;
-        // TODO - sanitize?
         if (data) {
           newState.value = data;
         }
