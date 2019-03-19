@@ -1,5 +1,7 @@
 const _ = require("lodash");
 const utils = require("@turbot/utils");
+const asyncjs = require("async");
+const errors = require("@turbot/errors");
 
 // const LOG_LEVELS = {
 //   debug: { value: 5 },
@@ -24,19 +26,39 @@ class Turbot {
 
   constructor(meta = {}, opts = {}) {
     this.meta = meta;
-    this.logEntries = [];
+
     this.process = null;
+    this.opts = opts;
 
-    this.commands = [];
-
-    this.opts = _.clone(opts);
-    _.defaults(this.opts, { type: "control" });
+    _.defaults(this.opts, { type: "control", delay: 2000 });
 
     // Prefer the log level in opts rather than environment variable
     this.logLevel = opts.logLevel || process.env.TURBOT_LOG_LEVEL;
     if (!this.logLevel) {
-      this.logLevel = "info";
+      this.logLevel = "warning";
     }
+
+    this.cargoContainer = new CargoContainer(meta, opts);
+
+    if (this.meta.live && !this.opts.inline) {
+      asyncjs.forever(
+        next => {
+          if (this._stop) {
+            console.log("STOPPING ....");
+            return;
+          }
+          this.cargoContainer.send();
+          _.delay(next, this.opts.delay);
+        },
+        err => {
+          console.error("Error", err);
+        }
+      );
+    }
+  }
+
+  stop() {
+    this._stop = true;
   }
 
   /**
@@ -89,11 +111,6 @@ class Turbot {
       if (err) {
         this.error("ERROR in function for ENV " + this.envId + " / TENANT " + this.tenantId, err);
       }
-
-      // Raise all actions and log all log entries
-      // console.log("FINALIZER - status: ", this.status);
-      // console.log("FINALIZER - logs: ", this._log);
-      // console.log("FINALIZER - actions: ", this._actions);
       callback(err, results);
     };
   }
@@ -136,10 +153,12 @@ class Turbot {
   }
 
   update() {
+    this.cargoContainer.phase = "update";
     this._process("update");
   }
 
   terminate() {
+    this.cargoContainer.phase = "terminate";
     this._process("terminate");
   }
 
@@ -154,7 +173,8 @@ class Turbot {
     if (!data.meta.timestamp) {
       data.meta.timestamp = new Date().toISOString();
     }
-    this.commands.push(data);
+
+    this.cargoContainer.command(data);
     return data;
   }
 
@@ -189,7 +209,9 @@ class Turbot {
     // }
 
     // TODO - limit the size / number of possible log entries to prevent flooding
-    this.logEntries.push(logEntry);
+    //this.logEntries.push(logEntry);
+
+    this.cargoContainer.log(logEntry);
     return this;
   }
 
@@ -328,18 +350,22 @@ class Turbot {
   }
 
   ok(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("ok", controlId, reason, data);
   }
 
   alarm(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("alarm", controlId, reason, data);
   }
 
   skipped(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("skipped", controlId, reason, data);
   }
 
   error(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("error", controlId, reason, data);
   }
 
@@ -348,10 +374,12 @@ class Turbot {
   }
 
   invalid(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("invalid", controlId, reason, data);
   }
 
   tbd(controlId, reason, data) {
+    this.terminate();
     return this._stateStager("tbd", controlId, reason, data);
   }
 
@@ -763,15 +791,106 @@ class Turbot {
   // COMMANDS
   //
 
+  // Backward compatibility (not really needed .. in inline we control all the libs)
   asProcessEvent() {
-    const opts = {
-      // State updates typically mean that the process is complete. Treat that as the default.
-      terminateIfCommands: true
-    };
+    return this.send();
+  }
 
+  sendFinal(callback) {
+    this.terminate();
+    this.stop();
+    return this.cargoContainer.send(callback);
+  }
+  send(callback) {
+    return this.cargoContainer.send(callback);
+  }
+}
+
+const uuidv4 = require("uuid/v4");
+const LOG_LEVELS = require("./log-levels");
+
+class CargoContainer {
+  constructor(meta, opts) {
+    this.logEntries = [];
+    this.commands = [];
+
+    this.meta = meta;
+    this.opts = opts;
+
+    this.series = uuidv4();
+    this.sequence = 0;
+
+    this.live = meta.live;
+    this.currentSize = 0;
+
+    this.inline = opts.inline;
+    this.senderFunction = opts.senderFunction;
+
+    this.phase = "update";
+  }
+
+  log(logEntry) {
+    if (!this.live) {
+      // If not live, discard non important stuff
+      const logEntryLevel = _.get(LOG_LEVELS, `${logEntry.level}.value`);
+
+      if (logEntryLevel > LOG_LEVELS["warning"].value) {
+        return;
+      }
+    }
+    let stringOutput = JSON.stringify(logEntry);
+    let size = Buffer.byteLength(stringOutput);
+
+    if (size > 200000) {
+      logEntry.data = {};
+      logEntry.message = "[Log item too large]";
+      stringOutput = JSON.stringify(logEntry);
+      size = Buffer.byteLength(stringOutput);
+    }
+
+    // If by adding this log entry we will breach the size, send immediately
+    if (size + this.currentSize > 200000) {
+      if (this.opts.inline) {
+        throw errors.internal("Inline payload too large", { size: size + this.currentSize });
+      }
+
+      this.send();
+    }
+
+    this.currentSize += size;
+    this.logEntries.push(logEntry);
+  }
+
+  command(command) {
+    let stringOutput = JSON.stringify(command);
+    let size = Buffer.byteLength(stringOutput);
+
+    if (size > 200000) {
+      throw new Error("Command is too big");
+    }
+
+    // If by adding this command we will breach the size, send immediately
+    if (size + this.currentSize > 200000) {
+      // Do not allow to send during inline execution
+      if (this.opts.inline) {
+        throw errors.internal("Inline payload too large", { size: size + this.currentSize });
+      }
+
+      this.send();
+    }
+
+    this.currentSize += size;
+    this.commands.push(command);
+  }
+
+  asProcessEvent() {
     // Event passes back the metadata it received, in particular, including the $token to authenticate the
     // commands.
+
     const event = { meta: this.meta };
+
+    event.meta.series = this.series;
+    event.meta.messageSequence = this.sequence++;
 
     const payload = {};
 
@@ -784,20 +903,9 @@ class Turbot {
     if (commands.length > 0) {
       // Send any commands with the event
       payload.commands = commands;
-      // By default, if there was an action, we terminate the process.
-      if (opts.terminateIfCommands && !this.process) {
-        this.terminate();
-      }
     }
 
-    // TODO: change this to capitalise the first letter
-    // Create a process event (update, terminate) wrapping all of the outcomes from the inline run.
-    if (this.process && this.process.state) {
-      event.type = "process.turbot.com:" + this.process.state;
-    } else {
-      // By default, it's just an update to the existing process.
-      event.type = "process.turbot.com:update";
-    }
+    event.type = `process.turbot.com:${this.phase}`;
 
     if (Object.keys(payload).length > 0) {
       event.payload = payload;
@@ -805,6 +913,23 @@ class Turbot {
 
     return event;
   }
-}
 
+  send(callback) {
+    const processEvent = this.asProcessEvent();
+
+    // Before calling the sender function (that will be async)
+    // empty the commands and logEntries while we still have the execution
+    // context - this is optimistic
+    this.logEntries = [];
+    this.commands = [];
+    this.currentSize = 0;
+
+    if (this.senderFunction) {
+      this.senderFunction(processEvent, this.opts, callback);
+    }
+
+    // also return what was generated
+    return processEvent;
+  }
+}
 module.exports = { Turbot };
