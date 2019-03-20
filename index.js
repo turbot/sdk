@@ -184,9 +184,13 @@ class Turbot {
   _logger(level, message, data) {
     // If we only pass 2 parameters and the the message is passed as the error object for example
     // message will be "" and we get the object within the 'data' field
-    if (!data && "object" === typeof message) {
+    if (!data && !_.isString(message)) {
       data = message;
       message = null;
+    }
+
+    if (!_.isPlainObject(data)) {
+      data = { data: data };
     }
 
     const entry = {
