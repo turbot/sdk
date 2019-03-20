@@ -30,7 +30,7 @@ class Turbot {
     this.process = null;
     this.opts = opts;
 
-    _.defaults(this.opts, { type: "control", delay: 2000 });
+    _.defaults(this.opts, { type: "control", delay: 1000 });
 
     // Prefer the log level in opts rather than environment variable
     this.logLevel = opts.logLevel || process.env.TURBOT_LOG_LEVEL;
@@ -145,7 +145,7 @@ class Turbot {
 
   _process(state) {
     if (this.process) {
-      this.log.warning(`Process state previously set to: ${this.process.state}. Resetting.`, this.process);
+      this.log.debug(`Process state previously set to: ${this.process.state}. Resetting.`, this.process);
     }
     this.process = { state, timestamp: new Date() };
     this.log.debug(`Setting process state: ${this.process.state}.`, this.process);
