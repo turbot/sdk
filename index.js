@@ -846,7 +846,7 @@ class CargoContainer {
       // If not live, discard non important stuff
       const logEntryLevel = _.get(LOG_LEVELS, `${logEntry.level}.value`);
 
-      if (logEntryLevel >= LOG_LEVELS["info"].value) {
+      if (logEntryLevel > LOG_LEVELS["info"].value) {
         return;
       }
     }
