@@ -307,7 +307,7 @@ class Turbot {
       case "control":
         meta[`${this.opts.type}Id`] = runnableId;
         if (data) {
-          _.defaults(newState, data);
+          newState.data = data;
         }
         break;
       case "policy":
