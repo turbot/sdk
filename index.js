@@ -44,7 +44,6 @@ class Turbot {
       asyncjs.forever(
         next => {
           if (this._stop) {
-            console.log("STOPPING ....");
             return;
           }
           this.cargoContainer.send();
@@ -307,6 +306,14 @@ class Turbot {
       case "control":
         meta[`${this.opts.type}Id`] = runnableId;
         if (data) {
+          if (data.details) {
+            newState.details = data.details;
+            delete data.details;
+          }
+          if (data.reason && _.isEmpty(newState.reason)) {
+            newState.reason = data.reason;
+            delete data.reason;
+          }
           newState.data = data;
         }
         break;
@@ -429,6 +436,9 @@ class Turbot {
           meta: commandMeta,
           payload: payload
         });
+      },
+      nextRun: function(data) {
+        self.cargoContainer.nextRun = data;
       }
     };
   }
@@ -729,6 +739,10 @@ class Turbot {
 
       error: function(reason, data) {
         return self._stateStager("error", reason, data);
+      },
+
+      nextRun: function(data) {
+        self.cargoContainer.nextRun = data;
       }
     };
   }
@@ -901,6 +915,10 @@ class CargoContainer {
     if (commands.length > 0) {
       // Send any commands with the event
       payload.commands = commands;
+    }
+
+    if (this.nextRun) {
+      payload.nextRun = this.nextRun;
     }
 
     event.type = `process.turbot.com:${this.phase}`;
