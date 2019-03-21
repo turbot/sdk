@@ -1,15 +1,7 @@
 const _ = require("lodash");
-const utils = require("@turbot/utils");
 const asyncjs = require("async");
 const errors = require("@turbot/errors");
-
-// const LOG_LEVELS = {
-//   debug: { value: 5 },
-//   info: { value: 4 },
-//   notice: { value: 3 },
-//   warning: { value: 2 },
-//   error: { value: 1 }
-// };
+const utils = require("@turbot/utils");
 
 class Turbot {
   // TODO
@@ -64,19 +56,8 @@ class Turbot {
    * 13/08 - This class was merged from two different modules sdk-control and a Turbot class
    * inside the function module. It's a bit messy for now while I'm trying to get it to work.
    *
-   * Check if the 'action' is needed?
    */
   initializeForEvent(event) {
-    this._status = null;
-    this._log = [];
-    this._actions = [];
-    this._commands = [];
-
-    const command = _.get(event, "command");
-    if (command) {
-      this._command = command;
-    }
-
     this._envId = _.get(event, "command.payload.envId", null);
     if (!this._envId) {
       this._envId = _.get(event, "command.meta.envId", null);
@@ -448,26 +429,6 @@ class Turbot {
   }
 
   //
-  // STATE MANAGEMENT FOR ACTIONS
-  //
-
-  /***
-   * @deprecated Please use OK. Will be removed hopefully sometime end of Jan 2019.
-   */
-  succeed(actionId, reason, data) {
-    //return this._actionStateStager("succeed", actionId, reason, data);
-    return this._stateStager("ok", actionId, reason, data);
-  }
-
-  /***
-   * @deprecated Please use Error. Will be removed hopefully sometime end of Jan 2019.
-   */
-  fail(actionId, reason, data) {
-    //return this._actionStateStager("fail", actionId, reason, data);
-    return this._stateStager("error", actionId, reason, data);
-  }
-
-  //
   // NOTIFICATIONS
   //
 
@@ -532,16 +493,18 @@ class Turbot {
   // RESOURCES
   //
 
-  _resource(type, resourceId, data) {
+  _resource(type, resourceId, data, turbotData) {
     let command = {
       type: "resource_" + type,
       meta: {
         resourceId: resourceId || this.meta.resourceId
+      },
+      payload: {
+        data: data,
+        turbotData: turbotData
       }
     };
-    if (data) {
-      command.payload = data;
-    }
+
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
     this.log.info(msg, data);
     this._command(command);
@@ -551,9 +514,9 @@ class Turbot {
   get resource() {
     var self = this;
     return {
-      create: function(resourceId, resourceTypeAka, data, inputMeta = null) {
-        if (!inputMeta) {
-          inputMeta = data;
+      create: function(resourceId, resourceTypeAka, data, turbotData = null) {
+        if (!turbotData) {
+          turbotData = data;
           data = resourceTypeAka;
           resourceTypeAka = resourceId;
           resourceId = null;
@@ -563,14 +526,15 @@ class Turbot {
           meta: {
             parentId: resourceId || self.meta.resourceId,
             type: resourceTypeAka
+          },
+          payload: {
+            data: data,
+            turbotData: data
           }
         };
-        if (data) {
-          command.payload = data;
-        }
-        _.defaults(command.meta, inputMeta);
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
+
         self._command(command);
         return self;
       },
@@ -578,9 +542,9 @@ class Turbot {
       /**
        * resourceId: parent
        */
-      upsert: function(resourceId, resourceTypeAka, data, inputMeta = null) {
-        if (!inputMeta) {
-          inputMeta = data;
+      upsert: function(resourceId, resourceTypeAka, data, turbotData = null) {
+        if (!turbotData) {
+          turbotData = data;
           data = resourceTypeAka;
           resourceTypeAka = resourceId;
           resourceId = null;
@@ -591,32 +555,34 @@ class Turbot {
           meta: {
             parentId: resourceId || self.meta.resourceId,
             type: resourceTypeAka
+          },
+          payload: {
+            data: data,
+            turbotData: turbotData
           }
         };
-        if (data) {
-          command.payload = data;
-        }
-        _.defaults(command.meta, inputMeta);
-        const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
+
+        const msg = `Upsert resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
+
         self._command(command);
         return self;
       },
 
-      put: function(resourceId, data) {
+      put: function(resourceId, data, turbotData) {
         if (!data) {
           data = resourceId;
           resourceId = null;
         }
-        return self._resource("put", resourceId, data);
+        return self._resource("put", resourceId, data, turbotData);
       },
 
-      update: function(resourceId, changes) {
+      update: function(resourceId, changes, turbotData) {
         if (!changes) {
           changes = resourceId;
           resourceId = null;
         }
-        return self._resource("update", resourceId, changes);
+        return self._resource("update", resourceId, changes, turbotData);
       },
 
       /**
@@ -624,8 +590,8 @@ class Turbot {
        * @param {*} resourceId resource id
        * @param {*} data If deleting by aka data should be in this format: { akas: [aka]}
        */
-      delete: function(resourceId, data) {
-        return self._resource("delete", resourceId, data);
+      delete: function(resourceId, turbotData) {
+        return self._resource("delete", resourceId, turbotData);
       },
 
       notify: function(resourceId, icon, message, data) {
