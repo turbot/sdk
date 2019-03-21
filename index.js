@@ -529,7 +529,7 @@ class Turbot {
           },
           payload: {
             data: data,
-            turbotData: data
+            turbotData: turbotData
           }
         };
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
