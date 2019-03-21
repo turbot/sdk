@@ -505,6 +505,8 @@ class Turbot {
       }
     };
 
+    _.pick(command.payload, _.identity);
+
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
     this.log.info(msg, data);
     this._command(command);
@@ -532,6 +534,9 @@ class Turbot {
             turbotData: turbotData
           }
         };
+
+        _.pick(command.payload, _.identity);
+
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
 
@@ -561,6 +566,8 @@ class Turbot {
             turbotData: turbotData
           }
         };
+
+        _.pick(command.payload, _.identity);
 
         const msg = `Upsert resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
         self.log.info(msg, data);
