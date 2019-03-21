@@ -577,19 +577,21 @@ class Turbot {
       },
 
       put: function(resourceId, data, turbotData) {
-        if (!data) {
+        if (!turbotData) {
+          turbotData = data;
           data = resourceId;
-          resourceId = null;
+          resourceId = self.meta.resourceId;
         }
         return self._resource("put", resourceId, data, turbotData);
       },
 
-      update: function(resourceId, changes, turbotData) {
-        if (!changes) {
-          changes = resourceId;
-          resourceId = null;
+      update: function(resourceId, data, turbotData) {
+        if (!turbotData) {
+          turbotData = data;
+          data = resourceId;
+          resourceId = self.meta.resourceId;
         }
-        return self._resource("update", resourceId, changes, turbotData);
+        return self._resource("update", resourceId, data, turbotData);
       },
 
       /**
