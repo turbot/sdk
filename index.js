@@ -22,7 +22,8 @@ class Turbot {
     this.process = null;
     this.opts = opts;
 
-    _.defaults(this.opts, { type: "control", delay: 1000 });
+    // Setting this 1 second makes it losing messages
+    _.defaults(this.opts, { type: "control", delay: 2000 });
 
     // Prefer the log level in opts rather than environment variable
     this.logLevel = opts.logLevel || process.env.TURBOT_LOG_LEVEL;
