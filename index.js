@@ -548,18 +548,40 @@ class Turbot {
       /**
        * resourceId: parent
        */
-      upsert: function(resourceId, resourceTypeAka, data, turbotData = null) {
-        if (!turbotData) {
-          turbotData = data;
+      upsert: function(parentId, resourceTypeAka, data, turbotData) {
+        if (!turbotData && !data && !resourceTypeAka) {
+          throw new errors.badRequest("Resource Type AKA and Data are mandatory");
+        }
+
+        // If there are only two parameters, assume that it is someting like this:
+        // ('#/resource/types/foo', { body: 'is here' });
+        // because these two fields are mandatory
+        if (!turbotData && !data) {
           data = resourceTypeAka;
-          resourceTypeAka = resourceId;
-          resourceId = null;
+          resourceTypeAka = parentId;
+
+          // Default parent id as the current executing control resource
+          parentId = self.meta.resourceId;
+          turbotData = null;
+        } else if (!turbotData) {
+          // Here we have three parameters so we have to do some guesswork what is the
+          // intention of the mod developer
+          if (_.isString(parentId)) {
+            // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
+            turbotData = data;
+            data = resourceTypeAka;
+            resourceTypeAka = parentId;
+            parentId = self.meta.resourceId;
+          } else {
+            // (null, '#/resource/types/foo', { body: 'is here' });
+            turbotData = null;
+          }
         }
 
         const command = {
           type: "resource_upsert",
           meta: {
-            parentId: resourceId || self.meta.resourceId,
+            parentId: parentId,
             type: resourceTypeAka
           },
           payload: {
