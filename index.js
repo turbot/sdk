@@ -543,10 +543,13 @@ class Turbot {
           resourceTypeAka = resourceId;
           resourceId = null;
         }
+
+        // Remove type when server side has been changed
         const command = {
           type: "resource_create",
           meta: {
             parentId: resourceId || self.meta.resourceId,
+            typeAka: resourceTypeAka,
             type: resourceTypeAka
           },
           payload: {
@@ -601,7 +604,8 @@ class Turbot {
           type: "resource_upsert",
           meta: {
             parentId: parentId,
-            type: resourceTypeAka
+            type: resourceTypeAka,
+            typeAka: resourceTypeAka
           },
           payload: {
             data: data,
