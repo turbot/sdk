@@ -628,11 +628,14 @@ class Turbot {
 
       /**
        * Delete resource by id or aka.
-       * @param {*} resourceId resource id
-       * @param {*} data If deleting by aka data should be in this format: { akas: [aka]}
+       * @param {*} resourceId resource id or aka. If not supplied the default control's resource will be
+       * deleted.
        */
-      delete: function(resourceId, turbotData) {
-        return self._resource("delete", resourceId, turbotData);
+      delete: function(resourceId) {
+        if (!resourceId) {
+          resourceId = self.meta.resourceId;
+        }
+        return self._resource("delete", resourceId);
       },
 
       notify: function(resourceId, icon, message, data) {
