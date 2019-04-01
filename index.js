@@ -495,10 +495,29 @@ class Turbot {
   //
 
   _resource(type, resourceId, data, turbotData) {
-    let command = {
+    let id = null;
+
+    if (/^\d{15}$/.test(resourceId)) {
+      // If resourceId is 15 digit number then it's the resource id
+      id = resourceId;
+    } else if (_.isPlainObject(resourceId)) {
+      // if the resource id is a plain object, that's the data
+      // and id is the meta.resourceId
+      turbotData = data;
+      data = resourceId;
+      id = this.meta.resourceId;
+    } else if (_.isString(resourceId)) {
+      id = null;
+      if (!turbotData) {
+        turbotData = {};
+      }
+      _.defaults(turbotData, { akas: [resourceId] });
+    }
+
+    const command = {
       type: "resource_" + type,
       meta: {
-        resourceId: resourceId || this.meta.resourceId
+        resourceId: id
       },
       payload: {
         data: data,
@@ -600,20 +619,10 @@ class Turbot {
       },
 
       put: function(resourceId, data, turbotData) {
-        if (!turbotData) {
-          turbotData = data;
-          data = resourceId;
-          resourceId = self.meta.resourceId;
-        }
         return self._resource("put", resourceId, data, turbotData);
       },
 
       update: function(resourceId, data, turbotData) {
-        if (!turbotData) {
-          turbotData = data;
-          data = resourceId;
-          resourceId = self.meta.resourceId;
-        }
         return self._resource("update", resourceId, data, turbotData);
       },
 
