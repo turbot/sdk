@@ -648,6 +648,59 @@ class Turbot {
         return self._resource("put", resourceId, data, turbotData);
       },
 
+      putPath: function(resourceId, path, data, turbotData) {
+        if (arguments.length < 2) {
+          throw new errors.badRequest("Path and data must be specified");
+        }
+
+        let id;
+        if (/^\d{15}$/.test(resourceId)) {
+          // If resourceId is 15 digit number then it's the resource id
+          id = resourceId;
+        } else if (_.isString(resourceId) && _.isPlainObject(path)) {
+          // turbot.resource.putPath('pathHere', { my: 'data' })
+          id = self.meta.resourceId;
+          data = path;
+          path = resourceId;
+        } else if (_.isString(resourceId) && _.isString(path) && (_.isPlainObject(data) || _.isString(data))) {
+          // Three parameters but the first one is aka
+          id = null;
+          if (!turbotData) {
+            turbotData = {};
+          }
+
+          _.defaults(turbotData, { akas: [resourceId] });
+        }
+
+        if (!id && !resourceId) {
+          throw new errors.badRequest("Unable to set id or aka for the putPath command");
+        }
+
+        if (!data) {
+          throw new errors.badRequest("Data not set in putPath command");
+        }
+
+        const command = {
+          type: "resource_putPath",
+          meta: {
+            resourceId: id,
+            path: path
+          },
+          payload: {
+            data: data,
+            turbotData: turbotData
+          }
+        };
+
+        command.payload.turbotData = _.omitBy(command.payload.turbotData, _.isNil);
+
+        // print aka or the id
+        const msg = "put path resource: " + (id || resourceId) + ".";
+        self.log.info(msg, data);
+        self._command(command);
+        return self;
+      },
+
       update: function(resourceId, data, turbotData) {
         return self._resource("update", resourceId, data, turbotData);
       },
