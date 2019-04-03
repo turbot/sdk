@@ -743,6 +743,26 @@ class Turbot {
     };
   }
 
+  get input() {
+    var self = this;
+    return {
+      set: function(path, value) {
+        const command = {
+          type: "input_set",
+          meta: {},
+          payload: {
+            data: {
+              path: path,
+              value: value
+            }
+          }
+        };
+        self._command(command);
+        return self;
+      }
+    };
+  }
+
   //
   // POLICIES
   //
@@ -943,6 +963,11 @@ class CargoContainer {
         return;
       }
     }
+
+    // // remove non-printable and other non-valid JSON chars
+    // // we saw some entries from GCP that has these control characters
+    // logEntry = logEntry.replace(/[\u0000-\u0019]+/g, "");
+
     let stringOutput = JSON.stringify(logEntry);
     let size = Buffer.byteLength(stringOutput);
 
