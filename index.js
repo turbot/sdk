@@ -387,7 +387,18 @@ class Turbot {
   get action() {
     const self = this;
     return {
-      run: function(actionUri, data) {
+      run: function(aka, actionUri, parameters) {
+        // aka parameter is optional
+        if (!parameters) {
+          parameters = actionUri;
+          actionUri = aka;
+          aka = null;
+        }
+
+        if (!aka) {
+          aka = self.meta.resourceId;
+        }
+
         // TODO: the actionUri should be in the payload not meta. See how the control.run is done
         const meta = { controlId: self.meta.controlId, actionUri: actionUri };
         if (self.meta.pid) {
@@ -396,7 +407,13 @@ class Turbot {
         self._command({
           type: "action_run",
           meta: meta,
-          payload: data
+          payload: {
+            meta: {
+              aka: aka,
+              actionUri: actionUri
+            },
+            data: parameters
+          }
         });
       }
     };
@@ -405,24 +422,44 @@ class Turbot {
   get control() {
     const self = this;
     return {
-      run: function(controlUri, data) {
+      /**
+       * aka parameter is optional
+       * example:
+       *
+       * turbot.control.run('my-aka', '#/control/types/cmdb', { foo: 'bar' })
+       */
+      run: function(aka, controlUri, parameters) {
+        // aka parameter is optional
+        if (!parameters) {
+          parameters = controlUri;
+          controlUri = aka;
+          aka = null;
+        }
+
+        if (!aka) {
+          aka = self.meta.resourceId;
+        }
+
         const payload = {
           meta: {
-            controlUri: controlUri
+            controlUri: controlUri,
+            aka: aka
           },
-          data: data
+          data: parameters
         };
 
         const commandMeta = { controlId: self.meta.controlId, actionId: self.meta.actionId };
         if (self.meta.pid) {
           commandMeta.parentProcessId = self.meta.pid;
         }
+
         self._command({
           type: "control_run",
           meta: commandMeta,
           payload: payload
         });
       },
+
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
       }
