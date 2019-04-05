@@ -706,24 +706,29 @@ class Turbot {
         return self._resource("put", resourceId, data, turbotData);
       },
 
+      /***
+       * The fuzzy smart logic works as long as data is not a string. If data is a string
+       * pass the first three parameters
+       * resourceId/aka, path, data, turbotData <opt>
+       */
       putPath: function(resourceId, path, data, turbotData) {
         if (arguments.length < 2) {
           throw new errors.badRequest("Path and data must be specified");
         }
 
         let id;
+
         if (/^\d{15}$/.test(resourceId)) {
           // If resourceId is 15 digit number then it's the resource id
           id = resourceId;
-        } else if (_.isString(resourceId) && _.isPlainObject(path)) {
-          // turbot.resource.putPath('pathHere', { my: 'data' })
+        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || _.isNull(path))) {
           id = self.meta.resourceId;
           data = path;
           path = resourceId;
         } else if (
           _.isString(resourceId) &&
           _.isString(path) &&
-          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data))
+          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || _.isNull(data))
         ) {
           // Three parameters but the first one is aka
           id = null;
@@ -738,10 +743,8 @@ class Turbot {
           throw new errors.badRequest("Unable to set id or aka for the putPath command");
         }
 
-        if (!data) {
-          throw new errors.badRequest("Data not set in putPath command");
-        }
-
+        // Do not check if data exist because we use null to indicate that
+        // we want to delete the given path
         const command = {
           type: "resource_putPath",
           meta: {
