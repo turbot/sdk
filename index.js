@@ -22,6 +22,8 @@ class Turbot {
     this.process = null;
     this.opts = opts;
 
+    this.resourcesToBeDeleted = [];
+
     // Setting this 1 second makes it losing messages
     _.defaults(this.opts, { type: "control", delay: 2000 });
 
@@ -54,11 +56,12 @@ class Turbot {
   }
 
   /**
-   * 13/08 - This class was merged from two different modules sdk-control and a Turbot class
-   * inside the function module. It's a bit messy for now while I'm trying to get it to work.
-   *
+   * 2019/04/05: the last usage of this initialisation method is mod-install Lambda. Once that's
+   * been migrated we can get rid of this function.
    */
   initializeForEvent(event) {
+    this.resourcesToBeDeleted = [];
+
     this._envId = _.get(event, "command.payload.envId", null);
     if (!this._envId) {
       this._envId = _.get(event, "command.meta.envId", null);
@@ -153,6 +156,24 @@ class Turbot {
     }
     if (!data.meta.timestamp) {
       data.meta.timestamp = new Date().toISOString();
+    }
+
+    let aka =
+      _.get(data, "meta.aka") ||
+      _.get(data, "meta.resourceId") ||
+      _.get(data, "payload.meta.aka") ||
+      _.get(data, "payload.meta.resourceId") ||
+      _.get(data, "payload.turbotData.akas[0]");
+
+    if (data.type && data.type.endsWith("_update")) {
+      // Control/action/policy update operation does not set the resourceId in the meta
+      // because it's implied from the control/action/policy itself
+      if (!aka && this.meta.resourceId) {
+        aka = this.meta.resourceId;
+      }
+    }
+    if (aka && this.resourcesToBeDeleted.includes(aka)) {
+      throw new errors.badRequest(`Unable to run ${aka}. Resource is already in the delete list.`);
     }
 
     this.cargoContainer.command(data);
@@ -699,7 +720,11 @@ class Turbot {
           id = self.meta.resourceId;
           data = path;
           path = resourceId;
-        } else if (_.isString(resourceId) && _.isString(path) && (_.isPlainObject(data) || _.isString(data))) {
+        } else if (
+          _.isString(resourceId) &&
+          _.isString(path) &&
+          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data))
+        ) {
           // Three parameters but the first one is aka
           id = null;
           if (!turbotData) {
@@ -751,7 +776,11 @@ class Turbot {
         if (!resourceId) {
           resourceId = self.meta.resourceId;
         }
-        return self._resource("delete", resourceId);
+
+        self._resource("delete", resourceId);
+        self.resourcesToBeDeleted.push(resourceId);
+
+        return self;
       },
 
       notify: function(resourceId, icon, message, data) {

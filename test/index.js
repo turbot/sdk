@@ -3,61 +3,46 @@ const _ = require("lodash");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/inline", function() {
-  this.timeout(30000);
+describe("@turbot/sdk", function() {
+  this.timeout(20000);
 
-  xit("Send test - not live", function() {
-    const turbot = new Turbot({ snsArn: "sns:arn" });
+  it("setting state should fail after deleting a resource", function() {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
-    turbot.log.debug("foo", { content: "x" });
-    turbot.log.warning("bar", { content: "x" });
-    const processEvent = turbot.sendFinal();
+    turbot.resource.delete();
+    try {
+      turbot.ok("this should throw an exception");
+    } catch (ex) {
+      return;
+    }
 
-    //console.log("process event", processEvent);
-
-    assert.equal(processEvent.payload.log.length, 1);
-    assert.equal(
-      processEvent.payload.log[0].message,
-      "bar",
-      "foo is not recorded because it is debug and we are not live"
-    );
-    assert.isUndefined(processEvent.meta.live);
-    assert.equal(processEvent.meta.messageSequence, 0);
-
-    assert.equal(processEvent.type, "process.turbot.com:terminate");
-
-    assert.equal(turbot.cargoContainer.logEntries.length, 0, "Log entries is now empty");
+    assert.fail("turbot.ok should throw an exception");
   });
 
-  const sender = (content, opts) => {
-    console.log("ping ...", { content, opts });
-  };
+  it("shouldn't be able to delete the same item twice", function() {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
-  it("Send test - live", function(done) {
-    const turbot = new Turbot({ live: true, snsArn: "sns:arn" }, { senderFunction: sender });
+    turbot.resource.delete();
+    try {
+      turbot.resource.delete();
+    } catch (ex) {
+      return;
+    }
 
-    turbot.log.debug("foo", { content: "x" });
-    turbot.log.warning("bar", { content: "x" });
+    assert.fail("second turbot.delete should throw an exception");
+  });
 
-    turbot.resource.upsert("aka:foo", { title: "bar" }, { akas: [1234, "fo"] });
+  it("shouldn't be able to delete the same item twice - in a series", function() {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
-    _.delay(() => {
-      turbot.stop();
+    turbot.resource.delete();
+    turbot.resource.delete("global-aka");
+    try {
+      turbot.resource.delete("global-aka");
+    } catch (ex) {
+      return;
+    }
 
-      turbot.send(true);
-
-      done();
-    }, 8000);
-
-    // assert.equal(processEvent.payload.log.length, 1);
-    // assert.equal(
-    //   processEvent.payload.log[0].message,
-    //   "bar",
-    //   "foo is not recorded because it is debug and we are not live"
-    // );
-    // assert.isUndefined(processEvent.meta.live);
-    // assert.equal(processEvent.meta.messageSequence, 0);
-
-    // assert.equal(turbot.cargoContainer.logEntries.length, 0, "Log entries is now empty");
+    assert.fail("third turbot.delete should throw an exception");
   });
 });
