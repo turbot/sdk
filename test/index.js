@@ -45,4 +45,20 @@ describe("@turbot/sdk", function() {
 
     assert.fail("third turbot.delete should throw an exception");
   });
+
+  xit("log", function() {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
+    turbot.log.warning("Foo 1", { data: "bar" });
+    turbot.log.warning("Foo 2", { data: "bar", key: "value" });
+
+    turbot.sensitiveExceptions = ["key"];
+
+    turbot.log.warning("Foo 3", { data: "bar", key: "value2" });
+    turbot.log.warning("Foo 4", { data: "bar", password: "value2" });
+
+    turbot.sensitiveExceptions = ["key", "password"];
+    turbot.log.warning("Foo 4", { data: "bar", password: "value2" });
+
+    console.log("JSON", JSON.stringify(turbot.cargoContainer.logEntries));
+  });
 });

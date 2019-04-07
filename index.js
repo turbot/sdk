@@ -23,6 +23,7 @@ class Turbot {
     this.opts = opts;
 
     this.resourcesToBeDeleted = [];
+    this.sensitiveExceptions = [];
 
     // Setting this 1 second makes it losing messages
     _.defaults(this.opts, { type: "control", delay: 2000 });
@@ -61,6 +62,7 @@ class Turbot {
    */
   initializeForEvent(event) {
     this.resourcesToBeDeleted = [];
+    this.sensitiveExceptions = [];
 
     this._envId = _.get(event, "command.payload.envId", null);
     if (!this._envId) {
@@ -205,17 +207,13 @@ class Turbot {
     // use explicit undefined check rather than truthiness check as we want to allow zero/false values through
     entry.data = typeof data === "undefined" ? {} : data;
 
-    const logEntry = utils.data.sanitize(entry, {
-      breakCircular: true
-    });
+    let loggingOptions = {
+      breakCircular: true,
+      exceptions: this.sensitiveExceptions
+    };
 
-    // const stream = LOG_LEVELS[level].value > LOG_LEVELS.error.value ? "error" : "log";
-    // if (LOG_LEVELS[level].value >= LOG_LEVELS[this.logLevel].value) {
-    //   console[stream](logEntry);
-    // }
-
-    // TODO - limit the size / number of possible log entries to prevent flooding
-    //this.logEntries.push(logEntry);
+    loggingOptions = _.omitBy(loggingOptions, _.isNil);
+    const logEntry = utils.data.sanitize(entry, loggingOptions);
 
     this.cargoContainer.log(logEntry);
     return this;
