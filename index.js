@@ -1131,16 +1131,18 @@ class CargoContainer {
   }
 
   streamData() {
+    const self = this;
+
     asyncjs.forever(
       next => {
-        if (this._stop) {
+        if (self._stop) {
           return;
         }
-        this.cargoContainer.send();
+        self.send();
         _.delay(next, this.opts.delay);
       },
       err => {
-        console.error("Error", err);
+        console.error("Error in Cargo Container stream data", err);
       }
     );
   }
