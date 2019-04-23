@@ -1,6 +1,19 @@
 {
   "version": "0.1",
   "language": "en-GB",
-  "words": ["asyncjs", "tsns", "utils", "tsqs", "tmod", "akas", "tlambda", "gekko", "gladesville", "tevents", "Lamdba"],
+  "words": [
+    "asyncjs",
+    "tsns",
+    "utils",
+    "tsqs",
+    "tmod",
+    "akas",
+    "tlambda",
+    "gekko",
+    "gladesville",
+    "tevents",
+    "Lamdba",
+    "uuidv4"
+  ],
   "flagWords": ["hte"]
 }

@@ -1,7 +1,9 @@
 const _ = require("lodash");
 const asyncjs = require("async");
 const errors = require("@turbot/errors");
+const LOG_LEVELS = require("./log-levels");
 const utils = require("@turbot/utils");
+const uuidv4 = require("uuid/v4");
 
 class Turbot {
   // TODO
@@ -37,23 +39,12 @@ class Turbot {
     this.cargoContainer = new CargoContainer(meta, opts);
 
     if (this.meta.live && !this.opts.inline) {
-      asyncjs.forever(
-        next => {
-          if (this._stop) {
-            return;
-          }
-          this.cargoContainer.send();
-          _.delay(next, this.opts.delay);
-        },
-        err => {
-          console.error("Error", err);
-        }
-      );
+      this.cargoContainer.streamData();
     }
   }
 
   stop() {
-    this._stop = true;
+    this.cargoContainer.stop();
   }
 
   /**
@@ -64,11 +55,6 @@ class Turbot {
     this.resourcesToBeDeleted = [];
     this.sensitiveExceptions = [];
 
-    this._envId = _.get(event, "command.payload.envId", null);
-    if (!this._envId) {
-      this._envId = _.get(event, "command.meta.envId", null);
-    }
-
     this._tenantId = _.get(event, "command.payload.tenantId", null);
     if (!this._tenantId) {
       this._tenantId = _.get(event, "command.meta.tenantId", null);
@@ -78,9 +64,6 @@ class Turbot {
 
     if (!event || !event.turbot) {
       return this;
-    }
-    if (event.turbot.env) {
-      this._envId = event.turbot.env.id;
     }
     if (event.turbot.tenant) {
       this._tenantId = event.turbot.tenant.id;
@@ -95,7 +78,7 @@ class Turbot {
   finalize(callback) {
     return (err, results) => {
       if (err) {
-        this.error("ERROR in function for ENV " + this.envId + " / TENANT " + this.tenantId, err);
+        this.error("Error in function for workspace " + this.tenantId, err);
       }
       callback(err, results);
     };
@@ -106,14 +89,6 @@ class Turbot {
   //
   // TODO: 13/08 should we split this functionality?
   //
-  get envId() {
-    return this._envId;
-  }
-
-  set envId(id) {
-    this._envId = id;
-  }
-
   get tenantId() {
     return this._tenantId;
   }
@@ -124,6 +99,14 @@ class Turbot {
 
   get trace() {
     return this._trace;
+  }
+
+  set largeCommandMode(largeCommandMode) {
+    this.cargoContainer.largeCommandMode = largeCommandMode;
+  }
+
+  get largeCommandMode() {
+    return this.cargoContainer.largeCommandMode;
   }
 
   //
@@ -990,21 +973,23 @@ class Turbot {
 
   sendFinal(callback) {
     this.terminate();
-    this.stop();
+    this.cargoContainer.stop();
     return this.cargoContainer.send(callback);
   }
+
   send(callback) {
     return this.cargoContainer.send(callback);
   }
 }
 
-const uuidv4 = require("uuid/v4");
-const LOG_LEVELS = require("./log-levels");
+const taws = require("@turbot/aws-sdk");
 
 class CargoContainer {
   constructor(meta, opts) {
     this.logEntries = [];
     this.commands = [];
+    this.largeCommands = {};
+    this.largeCommandsSize = 0;
 
     this.meta = meta;
     this.opts = opts;
@@ -1019,6 +1004,9 @@ class CargoContainer {
     this.senderFunction = opts.senderFunction;
 
     this.phase = "update";
+    this._stop = false;
+
+    this.s3PresignedUrl = meta.s3PresignedUrl;
   }
 
   log(logEntry) {
@@ -1062,15 +1050,38 @@ class CargoContainer {
     let stringOutput = JSON.stringify(command);
     let size = Buffer.byteLength(stringOutput);
 
-    if (size > 200000) {
-      throw new Error("Command is too big");
+    command.meta.id = uuidv4();
+
+    if (size > 1048576) {
+      throw errors.badRequest("Maximum command size is 1 MB");
+    }
+
+    if (this.largeCommandMode || size > 200000 || size + this.currentSize > 200000) {
+      this.stop();
+
+      this.largeCommands[command.meta.id] = command;
+      command = {
+        type: "large_command",
+        meta: {
+          id: command.meta.id
+        }
+      };
+      this.commands.push(command);
+
+      // TODO: limit large commands size but not from the SDK, it needs to be from the pre-signed URL
+      // and also from the s3 bucket itself
+
+      // Update the size
+      this.currentSize += Buffer.byteLength(JSON.stringify(command));
+      return;
     }
 
     // If by adding this command we will breach the size, send immediately
     if (size + this.currentSize > 200000) {
-      // Do not allow to send during inline execution
+      // Do not allow to send during inline execution, this should never happen though
+      // if the command sizing is correct
       if (this.opts.inline) {
-        throw errors.internal("Inline payload too large", { size: size + this.currentSize });
+        throw errors.internal("Inline payload too large. ", { size: size + this.currentSize });
       }
 
       this.send();
@@ -1113,6 +1124,25 @@ class CargoContainer {
     }
 
     return event;
+  }
+
+  stop() {
+    this._stop = true;
+  }
+
+  streamData() {
+    asyncjs.forever(
+      next => {
+        if (this._stop) {
+          return;
+        }
+        this.cargoContainer.send();
+        _.delay(next, this.opts.delay);
+      },
+      err => {
+        console.error("Error", err);
+      }
+    );
   }
 
   send(callback) {
