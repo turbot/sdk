@@ -567,7 +567,7 @@ class Turbot {
     command.payload = _.omitBy(command.payload, _.isNil);
 
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
-    this.log.info(msg, data);
+    this.log.info(msg, { data, turbotData });
     this._command(command);
     return this;
   }
@@ -622,7 +622,7 @@ class Turbot {
         command.payload = _.omitBy(command.payload, _.isNil);
 
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
-        self.log.info(msg, data);
+        self.log.info(msg, { data, turbotData });
 
         self._command(command);
         return self;
@@ -677,7 +677,7 @@ class Turbot {
         command.payload = _.omitBy(command.payload, _.isNil);
 
         const msg = `Upsert resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
-        self.log.info(msg, data);
+        self.log.info(msg, { data, turbotData });
 
         self._command(command);
         return self;
@@ -742,7 +742,7 @@ class Turbot {
 
         // print aka or the id
         const msg = "put path resource: " + (id || resourceId) + ".";
-        self.log.info(msg, data);
+        self.log.info(msg, { data, turbotData });
         self._command(command);
         return self;
       },
