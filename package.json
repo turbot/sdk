@@ -2,7 +2,7 @@
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
   "version": "5.0.0-alpha.1",
-  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "coverage": "npx nyc npm test",
     "test": "npx mocha"
@@ -18,7 +18,7 @@
     "prettier": "1.14.2"
   },
   "dependencies": {
-    "@turbot/utils": "git+ssh://git@github.com:turbotio/utils.git",
+    "@turbot/utils": "5.0.0-beta.1",
     "async": "2.6.2",
     "lodash": "4.17.11",
     "uuid": "3.3.2"
