@@ -982,8 +982,6 @@ class Turbot {
   }
 }
 
-const taws = require("@turbot/aws-sdk");
-
 class CargoContainer {
   constructor(meta, opts) {
     this.logEntries = [];
@@ -1056,7 +1054,7 @@ class CargoContainer {
       throw errors.badRequest("Maximum command size is 1 MB");
     }
 
-    if (this.largeCommandMode || size > 200000 || size + this.currentSize > 200000) {
+    if (this.largeCommandMode || size > 225000 || size + this.currentSize > 225000) {
       this.stop();
 
       this.largeCommands[command.meta.id] = command;
@@ -1072,12 +1070,13 @@ class CargoContainer {
       // and also from the s3 bucket itself
 
       // Update the size
-      this.currentSize += Buffer.byteLength(JSON.stringify(command));
+      size = Buffer.byteLength(JSON.stringify(command));
+      this.currentSize += size;
       return;
     }
 
     // If by adding this command we will breach the size, send immediately
-    if (size + this.currentSize > 200000) {
+    if (size + this.currentSize > 225000) {
       // Do not allow to send during inline execution, this should never happen though
       // if the command sizing is correct
       if (this.opts.inline) {
