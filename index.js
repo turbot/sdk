@@ -376,6 +376,26 @@ class Turbot {
     return this._stateStager("tbd", controlId, reason, data);
   }
 
+  setCommandMeta(meta, turbotData) {
+    return (
+      _.chain(meta)
+        // Prefer turbotData's version of actors
+        .defaults({
+          actorIdentityId: _.get(turbotData, "actorIdentityId"),
+          actorPersonaId: _.get(turbotData, "actorPersonaId"),
+          actorRoleId: _.get(turbotData, "actorRoleId")
+        })
+        // Fallback to the event's meta (if there is any)
+        .defaults({
+          actorIdentityId: this.meta.actorIdentityId,
+          actorPersonaId: this.meta.actorPersonaId,
+          actorRoleId: this.meta.actorRoleId
+        })
+        .omitBy(_.isNil)
+        .value()
+    );
+  }
+
   //
   // Is action just a command? run_action for example?
   // or is it more of a control but potentially in a different shape
@@ -450,10 +470,12 @@ class Turbot {
           data: parameters
         };
 
-        const commandMeta = { controlId: self.meta.controlId, actionId: self.meta.actionId };
+        let commandMeta = { controlId: self.meta.controlId, actionId: self.meta.actionId };
         if (self.meta.pid) {
           commandMeta.parentProcessId = self.meta.pid;
         }
+
+        commandMeta = self.setCommandMeta(commandMeta, {});
 
         self._command({
           type: "control_run",
@@ -564,6 +586,7 @@ class Turbot {
       }
     };
 
+    command.meta = this.setCommandMeta(command.meta, turbotData);
     command.payload = _.omitBy(command.payload, _.isNil);
 
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
@@ -619,6 +642,7 @@ class Turbot {
           }
         };
 
+        command.meta = self.setCommandMeta(command.meta, turbotData);
         command.payload = _.omitBy(command.payload, _.isNil);
 
         const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
@@ -674,6 +698,7 @@ class Turbot {
           }
         };
 
+        command.meta = self.setCommandMeta(command.meta, turbotData);
         command.payload = _.omitBy(command.payload, _.isNil);
 
         const msg = `Upsert resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
@@ -738,6 +763,7 @@ class Turbot {
           }
         };
 
+        command.meta = self.setCommandMeta(command.meta, turbotData);
         command.payload.turbotData = _.omitBy(command.payload.turbotData, _.isNil);
 
         // print aka or the id
@@ -787,6 +813,7 @@ class Turbot {
         if (data) {
           command.payload.data = data;
         }
+        command.meta = self.setCommandMeta(command.meta, turbotData);
         self._command(command);
         return self;
       }
@@ -939,7 +966,7 @@ class Turbot {
   get event() {
     const self = this;
     return {
-      raise: function(aka, eventType, event, opts) {
+      raise: function(aka, eventType, event, turbotData) {
         const command = {
           type: "event_raise",
           meta: {
@@ -950,12 +977,10 @@ class Turbot {
           payload: event
         };
 
-        if (opts) {
-          _.defaults(command.meta, opts);
-        }
+        command.meta = self.setCommandMeta(command.meta, turbotData);
 
         const msg = `Raise event for aka ${aka}.`;
-        self.log.info(msg, event);
+        self.log.info(msg, { event: event, turbotData: turbotData });
         self._command(command);
         return self;
       }
