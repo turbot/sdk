@@ -377,23 +377,27 @@ class Turbot {
   }
 
   setCommandMeta(meta, turbotData) {
-    return (
-      _.chain(meta)
-        // Prefer turbotData's version of actors
-        .defaults({
-          actorIdentityId: _.get(turbotData, "actorIdentityId"),
-          actorPersonaId: _.get(turbotData, "actorPersonaId"),
-          actorRoleId: _.get(turbotData, "actorRoleId")
-        })
-        // Fallback to the event's meta (if there is any)
-        .defaults({
-          actorIdentityId: this.meta.actorIdentityId,
-          actorPersonaId: this.meta.actorPersonaId,
-          actorRoleId: this.meta.actorRoleId
-        })
-        .omitBy(_.isNil)
-        .value()
-    );
+    // Prefer the setup in TurbotData
+    meta = _.defaults(meta, {
+      actorIdentityId: _.get(turbotData, "actorIdentityId"),
+      actorPersonaId: _.get(turbotData, "actorPersonaId"),
+      actorRoleId: _.get(turbotData, "actorRoleId"),
+      alternatePersona: _.get(turbotData, "alternatePersona")
+    });
+
+    // Don't chain two defaults here, because we may mix turbotData and the one from the event's meta.
+
+    if (!meta.actorIdentityId && !meta.actorPersonaId && !meta.actorRoleId && !meta.alternatePersona) {
+      meta = _.defaults(meta, {
+        actorIdentityId: this.meta.actorIdentityId,
+        actorPersonaId: this.meta.actorPersonaId,
+        actorRoleId: this.meta.actorRoleId,
+        alternatePersona: this.meta.alternatePersona
+      });
+    }
+
+    meta = _.omitBy(meta, _.isNil);
+    return meta;
   }
 
   //
@@ -813,7 +817,7 @@ class Turbot {
         if (data) {
           command.payload.data = data;
         }
-        command.meta = self.setCommandMeta(command.meta, turbotData);
+        command.meta = self.setCommandMeta(command.meta, {});
         self._command(command);
         return self;
       }
