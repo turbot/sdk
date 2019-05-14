@@ -721,7 +721,7 @@ class Turbot {
        * pass the first three parameters
        * resourceId/aka, path, data, turbotData <opt>
        */
-      putPath: function(resourceId, path, data, turbotData) {
+      putPath: function(resourceId, path, data, turbotDataPath, turbotData) {
         if (arguments.length < 2) {
           throw new errors.badRequest("Path and data must be specified");
         }
@@ -732,6 +732,8 @@ class Turbot {
           // If resourceId is 15 digit number then it's the resource id
           id = resourceId;
         } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || _.isNull(path))) {
+          // two parameters: putPath('foo.bar',  { data: 'Object } )
+          // assume it's against the existing resource
           id = self.meta.resourceId;
           data = path;
           path = resourceId;
@@ -741,12 +743,20 @@ class Turbot {
           (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || _.isNull(data))
         ) {
           // Three parameters but the first one is aka
+
+          // This only works if all 5 parameters are supplied
           id = null;
           if (!turbotData) {
             turbotData = {};
           }
 
           _.defaults(turbotData, { akas: [resourceId] });
+        } else if (!resourceId && path && data && !turbotDataPath && !turbotData) {
+          // three parameters: putPath(null, 'path.prop, { my: 'object' })
+          id = self.meta.resourceId;
+        } else if (arguments.length === 5 && !resourceId) {
+          // if we want to pass null in the first parameter then we need to pass all 5 parameters
+          id = self.meta.resourceId;
         }
 
         if (!id && !resourceId) {
@@ -759,7 +769,8 @@ class Turbot {
           type: "resource_putPath",
           meta: {
             resourceId: id,
-            path: path
+            path: path,
+            turbotDataPath: turbotDataPath
           },
           payload: {
             data: data,
@@ -768,7 +779,9 @@ class Turbot {
         };
 
         command.meta = self.setCommandMeta(command.meta, turbotData);
-        command.payload.turbotData = _.omitBy(command.payload.turbotData, _.isNil);
+        if (_.isPlainObject(turbotData)) {
+          command.payload.turbotData = _.omitBy(command.payload.turbotData, _.isNil);
+        }
 
         // print aka or the id
         const msg = "put path resource: " + (id || resourceId) + ".";
