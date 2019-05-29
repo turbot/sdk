@@ -1059,16 +1059,18 @@ class CargoContainer {
       }
     }
 
-    // // remove non-printable and other non-valid JSON chars
-    // // we saw some entries from GCP that has these control characters
-    // logEntry = logEntry.replace(/[\u0000-\u0019]+/g, "");
-
     let stringOutput = JSON.stringify(logEntry);
     let size = Buffer.byteLength(stringOutput);
 
     if (size > 200000) {
       logEntry.data = {};
-      logEntry.message = "[Log item too large]";
+
+      if (_.isString(logEntry.message)) {
+        logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 256) + ". Size: " + size;
+      } else {
+        logEntry.message = "[Log item too large - no message supplied]. Size: " + size;
+      }
+
       stringOutput = JSON.stringify(logEntry);
       size = Buffer.byteLength(stringOutput);
     }
