@@ -1063,14 +1063,20 @@ class CargoContainer {
     let size = Buffer.byteLength(stringOutput);
 
     if (size > 200000) {
-      logEntry.data = {};
-
       if (_.isString(logEntry.message)) {
         logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 256) + ". Size: " + size;
       } else {
         logEntry.message = "[Log item too large - no message supplied]. Size: " + size;
       }
 
+      // At one stage we have an error, tried to log the error but the data object too big.
+      // This is not ideal, but will get us through, as long as the message is only nested 1 level.
+      const nestedMessage = _.get(logEntry, "data.error.message");
+      if (nestedMessage) {
+        logEntry.message += ". Nested message: " + nestedMessage.slice(0, 256);
+      }
+
+      logEntry.data = {};
       stringOutput = JSON.stringify(logEntry);
       size = Buffer.byteLength(stringOutput);
     }
