@@ -1064,7 +1064,7 @@ class CargoContainer {
 
     if (size > 200000) {
       if (_.isString(logEntry.message)) {
-        logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 256) + ". Size: " + size;
+        logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 1024) + ". Size: " + size;
       } else {
         logEntry.message = "[Log item too large - no message supplied]. Size: " + size;
       }
@@ -1073,7 +1073,7 @@ class CargoContainer {
       // This is not ideal, but will get us through, as long as the message is only nested 1 level.
       const nestedMessage = _.get(logEntry, "data.error.message");
       if (nestedMessage) {
-        logEntry.message += ". Nested message: " + nestedMessage.slice(0, 256);
+        logEntry.message += ". Nested message: " + nestedMessage.slice(0, 1024);
       }
 
       logEntry.data = {};
