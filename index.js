@@ -1,7 +1,6 @@
 const _ = require("lodash");
 const asyncjs = require("async");
 const errors = require("@turbot/errors");
-const LOG_LEVELS = require("./log-levels");
 const utils = require("@turbot/utils");
 const uuidv4 = require("uuid/v4");
 
@@ -1050,15 +1049,6 @@ class CargoContainer {
   }
 
   log(logEntry) {
-    if (!this.live) {
-      // If not live, discard non important stuff
-      const logEntryLevel = _.get(LOG_LEVELS, `${logEntry.level}.value`);
-
-      if (logEntryLevel > LOG_LEVELS["info"].value) {
-        return;
-      }
-    }
-
     let stringOutput = JSON.stringify(logEntry);
     let size = Buffer.byteLength(stringOutput);
 
