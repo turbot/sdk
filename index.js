@@ -789,6 +789,10 @@ class Turbot {
         return self;
       },
 
+      putPaths: function(resourceId, data, turbotData) {
+        return self._resource("putPaths", resourceId, data, turbotData);
+      },
+
       update: function(resourceId, data, turbotData) {
         return self._resource("update", resourceId, data, turbotData);
       },
