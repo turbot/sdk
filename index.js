@@ -976,6 +976,59 @@ class Turbot {
   }
 
   //
+  // GRANT
+  //
+
+  get grant() {
+    const self = this;
+    return {
+      delete: function(grantId, resourceId, profileId) {
+        if (!/\d+/.test(grantId)) {
+          throw new errors.badRequest("Grant Id must be specified.");
+        }
+        const command = {
+          type: "grant_delete",
+          meta: {
+            resourceId,
+            grantId,
+            profileId
+          }
+        };
+        let msg = `Delete grant ${grantId} for resource: ${command.meta.resourceId} of profile: ${profileId}`;
+        self.log.info(msg);
+        self._command(command);
+        return self;
+      }
+    };
+  }
+
+  //
+  // ACTIVE GRANT
+  //
+
+  get grantActivation() {
+    const self = this;
+    return {
+      delete: function(activeGrantId, resourceId) {
+        if (!/\d+/.test(activeGrantId)) {
+          throw new errors.badRequest("Grant Activation Id must be specified.");
+        }
+        const command = {
+          type: "grantActivation_delete",
+          meta: {
+            resourceId,
+            activeGrantId
+          }
+        };
+        let msg = `Delete active grant ${activeGrantId} for resource: ${command.meta.resourceId}`;
+        self.log.info(msg);
+        self._command(command);
+        return self;
+      }
+    };
+  }
+
+  //
   // EVENTS
   //
 
