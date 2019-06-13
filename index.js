@@ -306,7 +306,7 @@ class Turbot {
         break;
       case "policy":
         meta.policyValueId = runnableId;
-        if (data) {
+        if (data || data === "") {
           newState.value = data;
         }
         break;
@@ -936,7 +936,7 @@ class Turbot {
 
       // policy state functions
       ok: function(value) {
-        return self._stateStager("ok", value);
+        return self._stateStager("ok", "", value);
       },
 
       tbd: function(reason, data) {
