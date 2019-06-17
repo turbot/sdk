@@ -1103,13 +1103,17 @@ class CargoContainer {
     this._stop = false;
 
     this.s3PresignedUrl = meta.s3PresignedUrl;
+
+    const metaString = JSON.stringify(this.meta);
+    this.metaSize = Buffer.byteLength(metaString);
   }
 
   log(logEntry) {
     let stringOutput = JSON.stringify(logEntry);
     let size = Buffer.byteLength(stringOutput);
 
-    if (size > 200000) {
+    // Need to include the meta size as at minimum we need to send the meta size too
+    if (this.metaSize + size > 200000) {
       if (_.isString(logEntry.message)) {
         logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 1024) + ". Size: " + size;
       } else {
@@ -1128,8 +1132,8 @@ class CargoContainer {
       size = Buffer.byteLength(stringOutput);
     }
 
-    // If by adding this log entry we will breach the size, send immediately
-    if (size + this.currentSize > 200000) {
+    // If by adding this log entry we will breach the size, send immediately whatever we have in the buffer and only then add the log entries
+    if (this.metaSize + size + this.currentSize > 250000) {
       if (this.opts.inline) {
         throw errors.internal("Inline payload too large", { size: size + this.currentSize });
       }
@@ -1151,7 +1155,7 @@ class CargoContainer {
       throw errors.badRequest("Maximum command size is 1 MB");
     }
 
-    if (this.largeCommandMode || size > 225000 || size + this.currentSize > 225000) {
+    if (this.largeCommandMode || size > 225000 || this.metaSize + size + this.currentSize > 250000) {
       this.stop();
 
       this.largeCommands[command.meta.id] = command;

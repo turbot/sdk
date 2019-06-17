@@ -1,7 +1,7 @@
 {
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
-  "version": "5.0.0-alpha.1",
+  "version": "5.0.0-beta.1",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "coverage": "npx nyc npm test",
