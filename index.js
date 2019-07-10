@@ -193,7 +193,6 @@ class Turbot {
       breakCircular: true,
       exceptions: this.sensitiveExceptions
     };
-
     loggingOptions = _.omitBy(loggingOptions, _.isNil);
     const logEntry = utils.data.sanitize(entry, loggingOptions);
 
@@ -202,7 +201,7 @@ class Turbot {
   }
 
   get log() {
-    var self = this;
+    const self = this;
     return {
       // NOTE: Turbot log levels (e.g. emergency, etc) are not available to controls.
       error: function(message, data) {
@@ -255,7 +254,7 @@ class Turbot {
 
     let newState = { state, timestamp: new Date() };
 
-    // If the execution type if policy then we have a slightly different logic
+    // If the execution type is policy then we have a slightly different logic
     // in policy we are more interested with the data, so allow user to
     // pass turbot.ok({ policy: valueHere });
     //
@@ -541,8 +540,8 @@ class Turbot {
       }
       case "control":
       default: {
-        command.meta.controlId = this.meta.controlId;
-        command.payload.meta.controlId = this.meta.controlId;
+        command.meta.controlId = controlId;
+        command.payload.meta.controlId = controlId;
       }
     }
 
@@ -730,7 +729,7 @@ class Turbot {
         if (/^\d{15}$/.test(resourceId)) {
           // If resourceId is 15 digit number then it's the resource id
           id = resourceId;
-        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || _.isNull(path))) {
+        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || path === null)) {
           // two parameters: putPath('foo.bar',  { data: 'Object } )
           // assume it's against the existing resource
           id = self.meta.resourceId;
@@ -739,7 +738,7 @@ class Turbot {
         } else if (
           _.isString(resourceId) &&
           _.isString(path) &&
-          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || _.isNull(data))
+          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || data === null)
         ) {
           // Three parameters but the first one is aka
 
@@ -878,7 +877,7 @@ class Turbot {
     }
     // Create and put set the requirement to must by default. Update should not change the current setting.
     var defaultOpts = {};
-    if (type != "update") {
+    if (type !== "update") {
       defaultOpts.requirement = "must";
     }
     var data = Object.assign(defaultOpts, opts);
@@ -1194,7 +1193,6 @@ class CargoContainer {
   asProcessEvent() {
     // Event passes back the metadata it received, in particular, including the $token to authenticate the
     // commands.
-
     const event = { meta: this.meta };
 
     event.meta.series = this.series;
@@ -1242,7 +1240,7 @@ class CargoContainer {
         _.delay(next, this.opts.delay);
       },
       err => {
-        console.error("Error in Cargo Container stream data", err);
+        self.log.error("Error in Cargo Container stream data", err);
       }
     );
   }
@@ -1265,4 +1263,5 @@ class CargoContainer {
     return processEvent;
   }
 }
+
 module.exports = { Turbot };
