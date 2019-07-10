@@ -1,11 +1,22 @@
 {
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
+  "description": "Turbot SDK. Experimental package, do not use.",
   "version": "5.0.0-beta.1",
   "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/turbot/sdk.git"
+  },
   "scripts": {
     "coverage": "npx nyc npm test",
     "test": "npx mocha"
+  },
+  "dependencies": {
+    "@turbot/utils": "5.0.0",
+    "async": "2.6.2",
+    "lodash": "4.17.11",
+    "uuid": "3.3.2"
   },
   "devDependencies": {
     "chai": "4.2.0",
@@ -13,14 +24,8 @@
     "eslint-config-prettier": "6.0.0",
     "eslint-plugin-prettier": "3.1.0",
     "eslint-plugin-you-dont-need-lodash-underscore": "6.5.0",
-    "mocha": "6.1.4",
+    "mocha": "5.2.0",
     "nyc": "14.1.1",
     "prettier": "1.18.2"
-  },
-  "dependencies": {
-    "@turbot/utils": "5.0.0-beta.1",
-    "async": "2.6.2",
-    "lodash": "4.17.11",
-    "uuid": "3.3.2"
   }
 }
