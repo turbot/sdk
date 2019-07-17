@@ -1038,13 +1038,14 @@ class Turbot {
   get event() {
     const self = this;
     return {
-      raise: function(aka, eventType, event, turbotData) {
+      raise: function(aka, eventType, event, turbotData, eventLockId) {
         const command = {
           type: "event_raise",
           meta: {
             aka: aka,
             eventType: "event.turbot.com:External",
-            eventRaw: eventType
+            eventRaw: eventType,
+            eventLockId: eventLockId
           },
           payload: event
         };
