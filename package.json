@@ -13,7 +13,7 @@
     "test": "npx mocha"
   },
   "dependencies": {
-    "@turbot/utils": "5.0.0",
+    "@turbot/utils": "5.0.1",
     "async": "2.6.2",
     "lodash": "4.17.14",
     "uuid": "3.3.2"
