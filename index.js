@@ -47,29 +47,6 @@ class Turbot {
   }
 
   /**
-   * 2019/04/05: the last usage of this initialisation method is mod-install Lambda. Once that's
-   * been migrated we can get rid of this function.
-   */
-  initializeForEvent(event) {
-    this.resourcesToBeDeleted = [];
-    this.sensitiveExceptions = [];
-
-    this._tenantId = _.get(event, "command.payload.tenantId", null);
-    if (!this._tenantId) {
-      this._tenantId = _.get(event, "command.meta.tenantId", null);
-    }
-
-    this._trace = _.get(event, "command.meta.trace", false);
-
-    if (!event || !event.turbot) {
-      return this;
-    }
-    if (event.turbot.tenant) {
-      this._tenantId = event.turbot.tenant.id;
-    }
-  }
-
-  /**
    * Finalize function.
    *
    * @param {function} callback
@@ -101,6 +78,9 @@ class Turbot {
   }
 
   set largeCommandMode(largeCommandMode) {
+    if (this.opts.inline) {
+      throw new errors.badRequest("Large command is not valid in inline mode");
+    }
     this.cargoContainer.largeCommandMode = largeCommandMode;
   }
 
@@ -1138,7 +1118,12 @@ class CargoContainer {
         throw errors.internal("Inline payload too large", { size: size + this.currentSize });
       }
 
-      this.send();
+      if (!this.live) {
+        // If not live then don't stream .. we'll collect and switch to "large command v2" mode
+        this.largeCommandV2 = true;
+      } else {
+        this.send();
+      }
     }
 
     this.currentSize += size;
@@ -1155,24 +1140,43 @@ class CargoContainer {
       throw errors.badRequest("Maximum command size is 1 MB");
     }
 
+    if (this.largeCommandV2) {
+      this.currentSize += size;
+      this.commands.push(command);
+      return;
+    }
+
+    if (!this.live && !this.opts.inline) {
+      // If not live and in Lambda/Container, we have a much easier logic
+
+      if (this.metaSize + size + this.currentSize > 250000) {
+        // Introduced new mode for backward compatibility in the @turbot/fn package.
+        this.largeCommandV2 = true;
+      }
+
+      // Just keep adding it to the commands, we'll sort it out at the end
+      this.currentSize += size;
+      this.commands.push(command);
+      return;
+    }
+
+    // LargeCommandMode is used mainly for testing and used by some older mods, keep this until it's no longer used
+    // by any mod
     if (this.largeCommandMode || size > 225000 || this.metaSize + size + this.currentSize > 250000) {
+      // Then moment we receive a "large command" we need to stop sending/streaming the data, because s3 presigned URL
+      // can only receive one item. So we have to stop the streaming and collect all the commands.
       this.stop();
 
-      this.largeCommands[command.meta.id] = command;
-      command = {
-        type: "large_command",
-        meta: {
-          id: command.meta.id
-        }
-      };
+      this.largeCommandV2 = true;
+
+      // Just like the previous logic (non-streaming mode) keep collecting the data
+      // until right the end
       this.commands.push(command);
 
-      // TODO: limit large commands size but not from the SDK, it needs to be from the pre-signed URL
-      // and also from the s3 bucket itself
-
       // Update the size
-      size = Buffer.byteLength(JSON.stringify(command));
       this.currentSize += size;
+
+      // Don't forget to return
       return;
     }
 
@@ -1198,6 +1202,10 @@ class CargoContainer {
 
     event.meta.series = this.series;
     event.meta.messageSequence = this.sequence++;
+
+    if (this.largeCommandV2) {
+      event.meta.mode = "largeCommandV2";
+    }
 
     const payload = {};
 
@@ -1247,6 +1255,14 @@ class CargoContainer {
   }
 
   send(callback) {
+    if (this.largeCommandV2) {
+      // If we are in the large command v2 mode, we need to clear the commands array because it should be saved in the s3 presigned url.
+      // not being sent back to SQS
+      this.commands = [];
+      this.logEntries = [];
+      this.meta.largeCommandV2 = true;
+    }
+
     const processEvent = this.asProcessEvent();
 
     // Before calling the sender function (that will be async)
