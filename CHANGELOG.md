@@ -2,7 +2,7 @@
 
 # Release History
 
-## 5.0.0-beta.5 [2019-10-10]
+## 5.0.0-beta.4 [2019-10-10]
 
 - Updated: don't send data in live mode if there's nothing to send.
 
