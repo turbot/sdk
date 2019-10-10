@@ -1245,7 +1245,15 @@ class CargoContainer {
         if (self._stop) {
           return;
         }
-        self.send();
+
+        // If there's nothing don't send because we're just polluting the event bus
+        // initially we were thinking of a "heartbeat" to indicate that the process
+        // is still working. But this is not implemented yet and the effect of sending this
+        // heartbeats is unnecessary messages in the event bus
+        if (!_.isEmpty(this.logEntries) || !_.isEmpty(this.commands)) {
+          self.send();
+        }
+
         _.delay(next, this.opts.delay);
       },
       err => {
