@@ -654,6 +654,73 @@ class Turbot {
         return self;
       },
 
+      upsertGQL: function(parentId, resourceTypeAka, data, turbotData) {
+        if (!turbotData && !data && !resourceTypeAka) {
+          throw new errors.badRequest("Resource Type AKA and Data are mandatory");
+        }
+
+        // If there are only two parameters, assume that it is something like this:
+        // ('#/resource/types/foo', { body: 'is here' });
+        // because these two fields are mandatory
+        if (!turbotData && !data) {
+          data = resourceTypeAka;
+          resourceTypeAka = parentId;
+
+          // Default parent id as the current executing control resource
+          parentId = self.meta.resourceId;
+          turbotData = null;
+        } else if (!turbotData) {
+          // Here we have three parameters so we have to do some guesswork what is the
+          // intention of the mod developer
+          if (_.isString(parentId)) {
+            // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
+            turbotData = data;
+            data = resourceTypeAka;
+            resourceTypeAka = parentId;
+            parentId = self.meta.resourceId;
+          } else {
+            // (null, '#/resource/types/foo', { body: 'is here' });
+            turbotData = null;
+          }
+        }
+
+        const query = `mutation UpsertResource($input: UpsertResourceInput!) {
+          upsertResource(input: $input) {
+            turbot {
+              id
+            }
+          }
+        }`;
+
+        const variables = {
+          input: {
+            parent: parentId,
+            type: resourceTypeAka,
+            data: data,
+            metadata: turbotData.metadata || turbotData.custom
+          }
+        };
+
+        _.merge(variables, turbotData);
+        if (!variables.input.metadata) {
+          variables.input.metadata = turbotData.custom;
+        }
+
+        delete variables.input.custom;
+
+        const command = {
+          type: "graphql",
+          query,
+          variables
+        };
+
+        const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
+        self.log.info(msg, { data, turbotData });
+
+        self._command(command);
+        return self;
+      },
+
       /**
        * resourceId: parent
        */
@@ -1311,3 +1378,4 @@ class CargoContainer {
 }
 
 module.exports = { Turbot };
+s;
