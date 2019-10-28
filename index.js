@@ -654,7 +654,7 @@ class Turbot {
         return self;
       },
 
-      upsertGQL: function(parentId, resourceTypeAka, data, turbotData) {
+      upsert: function(parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
         }
@@ -684,7 +684,7 @@ class Turbot {
           }
         }
 
-        const query = `mutation UpsertResource($input: UpsertResourceInput!) {
+        const query = `mutation UpsertResource($input: RunnableUpsertResourceInput!) {
           upsertResource(input: $input) {
             turbot {
               id
@@ -696,14 +696,13 @@ class Turbot {
           input: {
             parent: parentId,
             type: resourceTypeAka,
-            data: data,
-            metadata: turbotData.metadata || turbotData.custom
+            data: data
           }
         };
 
-        _.merge(variables, turbotData);
+        _.merge(variables.input, turbotData);
         if (!variables.input.metadata) {
-          variables.input.metadata = turbotData.custom;
+          variables.input.metadata = _.get(turbotData, "custom");
         }
 
         delete variables.input.custom;
@@ -724,7 +723,7 @@ class Turbot {
       /**
        * resourceId: parent
        */
-      upsert: function(parentId, resourceTypeAka, data, turbotData) {
+      upsert_legacy: function(parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
         }
@@ -1378,4 +1377,3 @@ class CargoContainer {
 }
 
 module.exports = { Turbot };
-s;
