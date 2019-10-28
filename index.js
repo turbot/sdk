@@ -354,6 +354,31 @@ class Turbot {
     return this._stateStager("tbd", controlId, reason, data);
   }
 
+  setGraphqlVariablesActors(input, turbotData) {
+    if (!input.actor) {
+      input.actor = {};
+    }
+
+    // This is for backward compatibility with the mods
+    input.actor = _.defaults(input.actor, {
+      identityId: _.get(turbotData, "identityId", _.get(turbotData, "actorIdentityId")),
+      personaId: _.get(turbotData, "personaId", _.get(turbotData, "actorPersonaId")),
+      roleId: _.get(turbotData, "roleId", _.get(turbotData, "actorRoleId")),
+      alternatePersona: _.get(turbotData, "alternatePersona")
+    });
+
+    if (!input.actor.identityId && !input.actor.personaId && !input.actor.roleId && !input.actor.alternatePersona) {
+      input.actor = _.defaults(input.actor, {
+        identityId: this.meta.identityId || this.meta.actorIdentityId,
+        personaId: this.meta.personaId || this.meta.actorPersonaId,
+        roleId: this.meta.roleId || this.meta.actorRoleId,
+        alternatePersona: this.meta.alternatePersona
+      });
+    }
+
+    input.actor = _.omitBy(input.actor, _.isNil);
+    return input;
+  }
   setCommandMeta(meta, turbotData) {
     // Prefer the setup in TurbotData
     meta = _.defaults(meta, {
@@ -706,6 +731,8 @@ class Turbot {
         }
 
         delete variables.input.custom;
+
+        variables.input = self.setGraphqlVariablesActors(variables.input, turbotData);
 
         const command = {
           type: "graphql",
