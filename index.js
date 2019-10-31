@@ -625,6 +625,74 @@ class Turbot {
   get resource() {
     var self = this;
     return {
+      createGQL: function(parentId, resourceTypeAka, data, turbotData) {
+        if (!turbotData && !data && !resourceTypeAka) {
+          throw new errors.badRequest("Resource Type AKA and Data are mandatory");
+        }
+
+        // If there are only two parameters, assume that it is something like this:
+        // ('#/resource/types/foo', { body: 'is here' });
+        // because these two fields are mandatory
+        if (!turbotData && !data) {
+          data = resourceTypeAka;
+          resourceTypeAka = parentId;
+
+          // Default parent id as the current executing control resource
+          parentId = self.meta.resourceId;
+          turbotData = null;
+        } else if (!turbotData) {
+          // Here we have three parameters so we have to do some guesswork what is the
+          // intention of the mod developer
+          if (_.isString(parentId)) {
+            // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
+            turbotData = data;
+            data = resourceTypeAka;
+            resourceTypeAka = parentId;
+            parentId = self.meta.resourceId;
+          } else {
+            // (null, '#/resource/types/foo', { body: 'is here' });
+            turbotData = null;
+          }
+        }
+
+        const query = `mutation CreateResource($input: RunnableCreateResourceInput!) {
+          createResource(input: $input) {
+            turbot {
+              id
+            }
+          }
+        }`;
+
+        const variables = {
+          input: {
+            parent: parentId,
+            type: resourceTypeAka,
+            data: data
+          }
+        };
+
+        _.merge(variables.input, turbotData);
+        if (!variables.input.metadata) {
+          variables.input.metadata = _.get(turbotData, "custom");
+        }
+
+        delete variables.input.custom;
+
+        variables.input = self.setGraphqlVariablesActors(variables.input, turbotData);
+
+        const command = {
+          type: "graphql",
+          query,
+          variables
+        };
+
+        const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
+        self.log.info(msg, { data, turbotData });
+
+        self._command(command);
+        return self;
+      },
+
       create: function(parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
