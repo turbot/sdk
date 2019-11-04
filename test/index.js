@@ -87,6 +87,6 @@ describe("@turbot/sdk - notify", function() {
     turbot.notify("fal", "test", { my: "data" });
     const eventData = turbot.sendFinal();
     const command = eventData.payload.commands[0];
-    console.log("command", command);
+    // console.log("command", command);
   });
 });
