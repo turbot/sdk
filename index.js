@@ -241,7 +241,7 @@ class Turbot {
     // For controls we want to be able to say:
     // turbot.ok('reason here');
     //
-    if (this.opts.type === "policy" && !data) {
+    if (this.opts.type === "policy" && (data === null || data === undefined)) {
       data = reason;
       reason = null;
     }
@@ -285,7 +285,7 @@ class Turbot {
         break;
       case "policy":
         meta.policyValueId = runnableId;
-        if (data || data === "") {
+        if (!_.isNil(data)) {
           newState.value = data;
         }
         break;
@@ -468,6 +468,26 @@ class Turbot {
 
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
+      },
+
+      // the turbot.control.ok mirrors the turbot.(ok/tbd/invalid/error). We would like
+      // mod developers to always put a reason in a control set change, unlike setting policy
+      // turbot.policy.ok(<policy value>). Majority of the case we don't set a reason for setting
+      // policy value
+      ok: function(reason, data) {
+        return self._stateStager("ok", reason, data);
+      },
+
+      tbd: function(reason, data) {
+        return self._stateStager("tbd", reason, data);
+      },
+
+      invalid: function(reason, data) {
+        return self._stateStager("invalid", reason, data);
+      },
+
+      error: function(reason, data) {
+        return self._stateStager("error", reason, data);
       }
     };
   }
@@ -883,6 +903,7 @@ class Turbot {
   get policy() {
     const self = this;
     return {
+      // policy settings function
       create: function(resourceId, policyTypeAka, value, opts) {
         return self._policy("create", resourceId, policyTypeAka, value, opts);
       },
@@ -913,7 +934,7 @@ class Turbot {
         return self;
       },
 
-      // policy state functions
+      // policy state & value functions
       ok: function(value) {
         return self._stateStager("ok", "", value);
       },

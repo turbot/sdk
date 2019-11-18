@@ -2,6 +2,11 @@
 
 # Release History
 
+## 5.0.0-beta.5 [2019-11-18]
+
+- Fixed: turbot.policy.ok(0) should return the value 0 instead of undefined.
+- Fixed: turbot.policy.ok(false) should return false in data field.
+
 ## 5.0.0-beta.4 [2019-10-10]
 
 - Updated: don't send data in live mode if there's nothing to send.
