@@ -285,7 +285,7 @@ class Turbot {
         break;
       case "policy":
         meta.policyValueId = runnableId;
-        if (data || data === "" || data === false) {
+        if (!_.isNil(data)) {
           newState.value = data;
         }
         break;

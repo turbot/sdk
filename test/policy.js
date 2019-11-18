@@ -35,7 +35,8 @@ describe("@turbot/sdk", function() {
       "",
       [{ type: "aws", level: "admin" }],
       [{ type: "aws", level: "admin" }, [1, 2, 3]],
-      [[1, 2, 3], { type: "aws", level: "admin" }]
+      [[1, 2, 3], { type: "aws", level: "admin" }],
+      0
     ];
 
     values.forEach(function(value) {
