@@ -2,7 +2,7 @@
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
   "description": "Turbot SDK. Experimental package, do not use.",
-  "version": "5.0.0-beta.6",
+  "version": "5.0.0",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",

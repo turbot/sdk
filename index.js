@@ -320,8 +320,139 @@ class Turbot {
     return this._state(state, controlId, reason, data);
   }
 
+  _stateGQL(state, runnableId, reason, data) {
+    const meta = {};
+    if (!runnableId) {
+      switch (this.opts.type) {
+        case "action":
+          runnableId = this.meta.actionId;
+          break;
+        case "scheduledAction":
+          runnableId = this.meta.scheduledActionId;
+          break;
+        case "policy":
+          runnableId = this.meta.policyValueId;
+          break;
+        case "report":
+          runnableId = this.meta.reportId;
+          break;
+        case "control":
+        default:
+          runnableId = this.meta.controlId;
+      }
+    }
+
+    let newState = { state, timestamp: new Date() };
+
+    // If the execution type is policy then we have a slightly different logic
+    // in policy we are more interested with the data, so allow user to
+    // pass turbot.ok({ policy: valueHere });
+    //
+    // For controls we want to be able to say:
+    // turbot.ok('reason here');
+    //
+    if (this.opts.type === "policy" && !data) {
+      data = reason;
+      reason = null;
+    }
+    // Support the case where they pass in an object for data, but no reason.
+    else if (!data && typeof reason != "string") {
+      data = reason;
+      reason = null;
+    }
+
+    if (reason) {
+      newState.reason = reason;
+    } else {
+      // This looks rather odd, but don't remove it. This issue is illustrated in
+      // turbot-core/events/test/events.js
+      // Different error has different output behaviour with VM2.
+      if (data && data.stack && data.message && typeof data.stack === "string") {
+        reason = data.name + ": " + data.message;
+        newState.reason = reason;
+      }
+    }
+
+    this.log.info(`Update ${this.opts.type} state: ${newState.state}.`, newState);
+
+    let query;
+    let variables;
+
+    switch (this.opts.type) {
+      case "action":
+      case "scheduledAction":
+      case "report":
+      case "control":
+        meta[`${this.opts.type}Id`] = runnableId;
+        if (data) {
+          if (data.details) {
+            newState.details = data.details;
+            delete data.details;
+          }
+          if (data.reason && _.isEmpty(newState.reason)) {
+            newState.reason = data.reason;
+            delete data.reason;
+          }
+          newState.data = data;
+        }
+        break;
+      case "policy":
+        query = `mutation UpdatePolicyValue($input: UpdatePolicyValueInput!) {
+            updatePolicyValue(input: $input) {
+              turbot {
+                id
+              }
+            }
+          }`;
+
+        variables = {
+          input: {
+            id: runnableId,
+            value: data,
+            state: state,
+            reason: reason
+          }
+        };
+
+        break;
+      default:
+        meta[`${this.opts.type}Id`] = runnableId;
+    }
+
+    const command = {
+      type: "graphql",
+      query,
+      variables
+    };
+
+    this._command(command);
+    return this;
+  }
+
+  _stateStagerGQL(state, arg1, arg2, arg3) {
+    let controlId, reason, data;
+    if (/^\d{15}$/.test(arg1)) {
+      controlId = arg1;
+      if (typeof arg2 == "string") {
+        reason = arg2;
+        data = arg3;
+      } else {
+        data = arg2;
+      }
+    } else if (typeof arg1 == "string") {
+      reason = arg1;
+      data = arg2;
+    } else {
+      data = arg1;
+    }
+    return this._stateGQL(state, controlId, reason, data);
+  }
+
   ok(controlId, reason, data) {
     this.terminate();
+    if (this.opts.type === "policy") {
+      return this._stateStagerGQL("ok", controlId, reason, data);
+    }
     return this._stateStager("ok", controlId, reason, data);
   }
 
@@ -352,6 +483,32 @@ class Turbot {
   tbd(controlId, reason, data) {
     this.terminate();
     return this._stateStager("tbd", controlId, reason, data);
+  }
+
+  setGraphqlVariablesActors(input, turbotData) {
+    if (!input.actor) {
+      input.actor = {};
+    }
+
+    // This is for backward compatibility with the mods
+    input.actor = _.defaults(input.actor, {
+      identityId: _.get(turbotData, "identityId", _.get(turbotData, "actorIdentityId")),
+      personaId: _.get(turbotData, "personaId", _.get(turbotData, "actorPersonaId")),
+      roleId: _.get(turbotData, "roleId", _.get(turbotData, "actorRoleId")),
+      alternatePersona: _.get(turbotData, "alternatePersona")
+    });
+
+    if (!input.actor.identityId && !input.actor.personaId && !input.actor.roleId && !input.actor.alternatePersona) {
+      input.actor = _.defaults(input.actor, {
+        identityId: this.meta.identityId || this.meta.actorIdentityId,
+        personaId: this.meta.personaId || this.meta.actorPersonaId,
+        roleId: this.meta.roleId || this.meta.actorRoleId,
+        alternatePersona: this.meta.alternatePersona
+      });
+    }
+
+    input.actor = _.omitBy(input.actor, _.isNil);
+    return input;
   }
 
   setCommandMeta(meta, turbotData) {
@@ -468,26 +625,6 @@ class Turbot {
 
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
-      },
-
-      // the turbot.control.ok mirrors the turbot.(ok/tbd/invalid/error). We would like
-      // mod developers to always put a reason in a control set change, unlike setting policy
-      // turbot.policy.ok(<policy value>). Majority of the case we don't set a reason for setting
-      // policy value
-      ok: function(reason, data) {
-        return self._stateStager("ok", reason, data);
-      },
-
-      tbd: function(reason, data) {
-        return self._stateStager("tbd", reason, data);
-      },
-
-      invalid: function(reason, data) {
-        return self._stateStager("invalid", reason, data);
-      },
-
-      error: function(reason, data) {
-        return self._stateStager("error", reason, data);
       }
     };
   }
@@ -557,6 +694,88 @@ class Turbot {
   // RESOURCES
   //
 
+  _resourceGQL(type, resourceId, data, turbotData) {
+    let id = null;
+
+    if (/^\d{15}$/.test(resourceId)) {
+      // If resourceId is 15 digit number then it's the resource id
+      id = resourceId;
+    } else if (_.isPlainObject(resourceId)) {
+      // if the resource id is a plain object, that's the data
+      // and id is the meta.resourceId
+      turbotData = data;
+      data = resourceId;
+      id = this.meta.resourceId;
+    } else if (_.isString(resourceId)) {
+      // Assume resource id is aka. In GraphQL world we say the first element can be id or aka
+      id = resourceId;
+    }
+
+    if (!turbotData) {
+      turbotData = {};
+    }
+
+    let query;
+    if (type === "update") {
+      query = `mutation UpdateResource($input: RunnableUpdateResourceInput!) {
+        updateResource(input: $input) {
+          turbot {
+            id
+          }
+        }
+      }`;
+    } else if (type === "put") {
+      query = `mutation PutResource($input: RunnablePutResourceInput!) {
+        putResource(input: $input) {
+          turbot {
+            id
+          }
+        }
+      }`;
+    } else if (type === "putPaths") {
+      query = `mutation PutResourcePaths($input: RunnablePutResourcePathsInput!) {
+        putResourcePaths(input: $input) {
+          turbot {
+            id
+          }
+        }
+      }`;
+    }
+    const variables = {
+      input: {
+        id: id,
+        data: data
+      }
+    };
+
+    _.merge(variables.input, turbotData);
+    if (!variables.input.metadata) {
+      variables.input.metadata = _.get(turbotData, "custom");
+    }
+
+    // Backward compatibility
+    if (variables.input.parentId) {
+      variables.input.parent = variables.input.parentId;
+      delete variables.input.parentId;
+    }
+
+    delete variables.input.custom;
+
+    variables.input = this.setGraphqlVariablesActors(variables.input, turbotData);
+
+    const command = {
+      type: "graphql",
+      query,
+      variables
+    };
+
+    const msg = `${type} resource ${command.variables.input.id}.`;
+    this.log.info(msg, { data, turbotData });
+    this._command(command);
+
+    return this;
+  }
+
   _resource(type, resourceId, data, turbotData) {
     let id = null;
 
@@ -594,6 +813,7 @@ class Turbot {
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
     this.log.info(msg, { data, turbotData });
     this._command(command);
+
     return this;
   }
 
@@ -630,33 +850,44 @@ class Turbot {
           }
         }
 
-        // Remove type when server side has been changed
-        const command = {
-          type: "resource_create",
-          meta: {
-            parentId: parentId,
-            typeAka: resourceTypeAka,
-            type: resourceTypeAka
-          },
-          payload: {
-            data: data,
-            turbotData: turbotData
+        const query = `mutation CreateResource($input: RunnableCreateResourceInput!) {
+          createResource(input: $input) {
+            turbot {
+              id
+            }
+          }
+        }`;
+
+        const variables = {
+          input: {
+            parent: parentId,
+            type: resourceTypeAka,
+            data: data
           }
         };
 
-        command.meta = self.setCommandMeta(command.meta, turbotData);
-        command.payload = _.omitBy(command.payload, _.isNil);
+        _.merge(variables.input, turbotData);
+        if (!variables.input.metadata) {
+          variables.input.metadata = _.get(turbotData, "custom");
+        }
 
-        const msg = `Create resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
+        delete variables.input.custom;
+
+        variables.input = self.setGraphqlVariablesActors(variables.input, turbotData);
+
+        const command = {
+          type: "graphql",
+          query,
+          variables
+        };
+
+        const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
         self.log.info(msg, { data, turbotData });
 
         self._command(command);
         return self;
       },
 
-      /**
-       * resourceId: parent
-       */
       upsert: function(parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
@@ -687,23 +918,38 @@ class Turbot {
           }
         }
 
-        const command = {
-          type: "resource_upsert",
-          meta: {
-            parentId: parentId,
+        const query = `mutation UpsertResource($input: RunnableUpsertResourceInput!) {
+          upsertResource(input: $input) {
+            turbot {
+              id
+            }
+          }
+        }`;
+
+        const variables = {
+          input: {
+            parent: parentId,
             type: resourceTypeAka,
-            typeAka: resourceTypeAka
-          },
-          payload: {
-            data: data,
-            turbotData: turbotData
+            data: data
           }
         };
 
-        command.meta = self.setCommandMeta(command.meta, turbotData);
-        command.payload = _.omitBy(command.payload, _.isNil);
+        _.merge(variables.input, turbotData);
+        if (!variables.input.metadata) {
+          variables.input.metadata = _.get(turbotData, "custom");
+        }
 
-        const msg = `Upsert resource ${command.meta.type} with parent: ${command.meta.parentId}.`;
+        delete variables.input.custom;
+
+        variables.input = self.setGraphqlVariablesActors(variables.input, turbotData);
+
+        const command = {
+          type: "graphql",
+          query,
+          variables
+        };
+
+        const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
         self.log.info(msg, { data, turbotData });
 
         self._command(command);
@@ -711,7 +957,102 @@ class Turbot {
       },
 
       put: function(resourceId, data, turbotData) {
-        return self._resource("put", resourceId, data, turbotData);
+        //return self._resource("put", resourceId, data, turbotData);
+        return self._resourceGQL("put", resourceId, data, turbotData);
+      },
+
+      /***
+       * The fuzzy smart logic works as long as data is not a string. If data is a string
+       * pass the first three parameters
+       * resourceId/aka, path, data, turbotData <opt>
+       *
+       * This needs refactoring so we have consistency with the rest of the functions.
+       *
+       * We probably should ditch the fuzzy logic and just pass object parameter
+       * to align with GraphQL pattern.
+       */
+      putPath: function(resourceId, path, data, metadataPath, turbotData) {
+        if (arguments.length < 2) {
+          throw new errors.badRequest("Path and data must be specified");
+        }
+
+        let id;
+
+        if (/^\d{15}$/.test(resourceId)) {
+          // If resourceId is 15 digit number then it's the resource id
+          id = resourceId;
+        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || path === null)) {
+          // two parameters: putPath('foo.bar',  { data: 'Object } )
+          // assume it's against the existing resource
+          id = self.meta.resourceId;
+          data = path;
+          path = resourceId;
+        } else if (
+          _.isString(resourceId) &&
+          _.isString(path) &&
+          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || data === null)
+        ) {
+          // Three parameters but the first one is aka
+
+          // This only works if all 5 parameters are supplied
+          id = resourceId;
+        } else if (!resourceId && path && data && !metadataPath && !turbotData) {
+          // three parameters: putPath(null, 'path.prop, { my: 'object' })
+          id = self.meta.resourceId;
+        } else if (arguments.length === 5 && !resourceId) {
+          // if we want to pass null in the first parameter then we need to pass all 5 parameters
+          id = self.meta.resourceId;
+        }
+
+        if (!id && !resourceId) {
+          throw new errors.badRequest("Unable to set id or aka for the putPath command");
+        }
+
+        let query;
+        query = `mutation PutResourcePath($input: RunnablePutResourcePathInput!) {
+            putResourcePath(input: $input) {
+              turbot {
+                id
+              }
+            }
+          }`;
+        const variables = {
+          input: {
+            id: id,
+            data: data
+          }
+        };
+
+        _.merge(variables.input, turbotData);
+        if (!variables.input.metadata) {
+          variables.input.metadata = _.get(turbotData, "custom");
+        }
+
+        // Backward compatibility
+        if (variables.input.parentId) {
+          variables.input.parent = variables.input.parentId;
+          delete variables.input.parentId;
+        }
+
+        delete variables.input.custom;
+
+        variables.input = self.setGraphqlVariablesActors(variables.input, turbotData);
+
+        // Special case for putPath
+        variables.input.metadataPath = metadataPath;
+        variables.input.path = path;
+
+        const command = {
+          type: "graphql",
+          query,
+          variables
+        };
+
+        const msg = `put path resource ${command.variables.input.id}.`;
+        self.log.info(msg, { data, turbotData });
+        self._command(command);
+
+        return self;
       },
 
       /***
@@ -719,7 +1060,7 @@ class Turbot {
        * pass the first three parameters
        * resourceId/aka, path, data, turbotData <opt>
        */
-      putPath: function(resourceId, path, data, turbotDataPath, turbotData) {
+      putPath_legacy: function(resourceId, path, data, turbotDataPath, turbotData) {
         if (arguments.length < 2) {
           throw new errors.badRequest("Path and data must be specified");
         }
@@ -789,11 +1130,11 @@ class Turbot {
       },
 
       putPaths: function(resourceId, data, turbotData) {
-        return self._resource("putPaths", resourceId, data, turbotData);
+        return self._resourceGQL("putPaths", resourceId, data, turbotData);
       },
 
       update: function(resourceId, data, turbotData) {
-        return self._resource("update", resourceId, data, turbotData);
+        return self._resourceGQL("update", resourceId, data, turbotData);
       },
 
       /**
@@ -900,12 +1241,71 @@ class Turbot {
     return this;
   }
 
+  _policyGQL(type, resourceId, policyTypeAka, value, opts) {
+    if (!/\d+/.test(resourceId)) {
+      opts = value;
+      value = policyTypeAka;
+      policyTypeAka = resourceId;
+      resourceId = this.meta.resourceId;
+    }
+    // Avoiding lodash, this is a variant of _.isPlainObject(value)
+    if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+      opts = value;
+      value = undefined;
+    }
+    // Create and put set the requirement to must by default. Update should not change the current setting.
+    var defaultOpts = {};
+    if (type !== "update") {
+      defaultOpts.requirement = "must";
+    }
+    var data = Object.assign(defaultOpts, opts);
+    if (value !== undefined) {
+      data.value = value;
+    }
+
+    let query;
+    if (type === "create") {
+      query = `mutation CreatePolicySetting($input: CreatePolicySettingInputs!) {
+        createPolicySetting(input: $input) {
+          turbot {
+            id
+          }
+        }
+      }`;
+    }
+
+    let variables = {
+      input: {
+        resource: resourceId,
+        type: policyTypeAka
+      }
+    };
+
+    variables = Object.assign(variables, data);
+
+    const command = {
+      type: "graphql",
+      query,
+      variables
+    };
+
+    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${
+      command.meta.resourceId
+    } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
+    this.log.info(msg, data);
+
+    self._command(command);
+    return self;
+  }
+
   get policy() {
     const self = this;
     return {
-      // policy settings function
+      /**
+       * policy settings commands are not yet supported
       create: function(resourceId, policyTypeAka, value, opts) {
         return self._policy("create", resourceId, policyTypeAka, value, opts);
+        //return self._policyGQL("create", resourceId, policyTypeAka, value, opts);
       },
 
       put: function(resourceId, policyTypeAka, value, opts) {
@@ -915,6 +1315,7 @@ class Turbot {
       update: function(resourceId, policyTypeAka, value, opts) {
         return self._policy("update", resourceId, policyTypeAka, value, opts);
       },
+      **/
 
       delete: function(resourceId, policyTypeAka) {
         if (!/\d+/.test(resourceId)) {
@@ -934,9 +1335,9 @@ class Turbot {
         return self;
       },
 
-      // policy state & value functions
+      // policy state functions
       ok: function(value) {
-        return self._stateStager("ok", "", value);
+        return self._stateStagerGQL("ok", "", value);
       },
 
       tbd: function(reason, data) {

@@ -2,6 +2,12 @@
 
 # Release History
 
+## 5.0.0 [2019-12-09]
+
+Initial v5.0.0 release.
+
+- Updated: changed SDK commands from object based structure to GraphQL based structures.
+
 ## 5.0.0-beta.6 [2019-11-18]
 
 - Updated: dependencies

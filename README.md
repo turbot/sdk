@@ -3,7 +3,7 @@
 # @turbot/sdk
 
 The turbot JavaScript SDK simplifies writing controls, actions and calculated
-policies for execution in a Turbot environment. It is generlly used as
+policies for execution in a Turbot environment. It is generally used as
 a key component of [@turbot/fn](https://github.com/turbot/fn), which
 establishes context and environment for Turbot when run inside an AWS
 Lambda function.
@@ -42,12 +42,16 @@ npm install @turbot/sdk
 * notice
 * info
 * debug
-  Examples:
-  turbot.log.debug("String message for logging");
-  turbot.log.debug({object: "will", be: "logged", as: "data", with: "no", message: "string"});
-  turbot.log.debug("A message", {and: "an", object: "works fine"});
-  Limits:
-  - Each log message with its data must be less than 256kB in size.
+
+Examples:
+
+- turbot.log.debug("String message for logging");
+- turbot.log.debug({object: "will", be: "logged", as: "data", with: "no", message: "string"});
+- turbot.log.debug("A message", {and: "an", object: "works fine"});
+
+Limits:
+
+- Each log message with its data must be less than 256kB in size.
 
 ### States
 
