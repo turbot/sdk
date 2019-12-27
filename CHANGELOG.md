@@ -5,6 +5,7 @@
 ## 5.0.1 [tbd]
 
 - Updated: @turbot/utils to 5.0.5.
+- Updated: license to Apache 2.0.
 
 ## 5.0.1 [2019-12-27]
 

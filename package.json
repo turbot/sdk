@@ -1,9 +1,9 @@
 {
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
-  "description": "Turbot SDK. Experimental package, do not use.",
+  "description": "Turbot SDK",
   "version": "5.0.1",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/turbot/sdk.git"
