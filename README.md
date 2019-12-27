@@ -1,5 +1,3 @@
-### This is an experimental package - do not use.
-
 # @turbot/sdk
 
 The turbot JavaScript SDK simplifies writing controls, actions and calculated
