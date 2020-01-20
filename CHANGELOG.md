@@ -2,10 +2,11 @@
 
 # Release History
 
-## 5.1.0 [tbd]
+## 5.1.0 [2010-01-20]
 
 - Updated: async to 3.1.0.
 - Updated: lodash to 4.17.15.
+- Fixed: turbot.notify(controlId) incorrectly sends all notification for the control in the parameter even for the notification that belongs to other controls.
 
 ## 5.0.2 [2020-01-20]
 
