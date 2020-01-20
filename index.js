@@ -663,6 +663,12 @@ class Turbot {
       case "action": {
         command.meta.actionId = this.meta.actionId;
         command.payload.meta.actionId = this.meta.actionId;
+
+        // override
+        if (controlId) {
+          this.meta.parentControlId = controlId;
+        }
+
         break;
       }
       case "scheduledAction": {

@@ -2,10 +2,11 @@
 
 # Release History
 
-## 5.0.1 [tbd]
+## 5.0.2 [tbd]
 
 - Updated: @turbot/utils to 5.0.5.
 - Updated: license to Apache 2.0.
+- Fixed: turbot.notify(controlId) does not work when called from an action.
 
 ## 5.0.1 [2019-12-27]
 
