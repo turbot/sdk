@@ -2,7 +2,7 @@
 
 # Release History
 
-## 5.0.2 [tbd]
+## 5.0.2 [2020-01-20]
 
 - Updated: @turbot/utils to 5.0.5.
 - Updated: license to Apache 2.0.
