@@ -2,6 +2,11 @@
 
 # Release History
 
+## 5.1.0 [tbd]
+
+- Updated: async to 3.1.0.
+- Updated: lodash to 4.17.15.
+
 ## 5.0.2 [2020-01-20]
 
 - Updated: @turbot/utils to 5.0.5.
