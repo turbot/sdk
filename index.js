@@ -565,7 +565,6 @@ class Turbot {
         if (self.meta.pid) {
           meta.parentProcessId = self.meta.pid;
         }
-
         self._command({
           type: "action_run",
           meta: meta,
@@ -839,8 +838,7 @@ class Turbot {
         } else if (!turbotData) {
           // Here we have three parameters so we have to do some guesswork what is the
           // intention of the mod developer
-          if (!/^\d{15}$/.test(parentId) && _.isString(parentId))
-          {
+          if (_.isString(parentId)) {
             // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
             turbotData = data;
             data = resourceTypeAka;
@@ -848,7 +846,6 @@ class Turbot {
             parentId = self.meta.resourceId;
           } else {
             // (null, '#/resource/types/foo', { body: 'is here' });
-            // (123456789012345, '#/resource/types/foo', { body: 'is here' });
             turbotData = null;
           }
         }
@@ -909,8 +906,7 @@ class Turbot {
         } else if (!turbotData) {
           // Here we have three parameters so we have to do some guesswork what is the
           // intention of the mod developer
-          if (!/^\d{15}$/.test(parentId) && _.isString(parentId))
-          {
+          if (_.isString(parentId)) {
             // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
             turbotData = data;
             data = resourceTypeAka;
@@ -918,7 +914,6 @@ class Turbot {
             parentId = self.meta.resourceId;
           } else {
             // (null, '#/resource/types/foo', { body: 'is here' });
-            // (123456789012345, '#/resource/types/foo', { body: 'is here' });
             turbotData = null;
           }
         }
