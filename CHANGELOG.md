@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.1.1 [2010-02-04]
+
+- Fixed: create & update resource SDK API where the first parameter is the resource id.
+
 ## 5.1.0 [2010-01-20]
 
 - Updated: async to 3.1.0.
