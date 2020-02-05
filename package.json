@@ -2,7 +2,7 @@
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
   "description": "Turbot SDK",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@turbot/errors": "5.0.5",
-    "@turbot/utils": "5.0.5",
+    "@turbot/utils": "5.0.6",
     "async": "3.1.0",
     "lodash": "4.17.15",
     "uuid": "3.3.2"

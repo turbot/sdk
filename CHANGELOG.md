@@ -2,8 +2,9 @@
 
 # Release History
 
-## 5.1.2 []
+## 5.1.2 [2020-02-05]
 
+- Updated: @turbot/utils to 5.0.6.
 - Fixed: incorrect log messages for resource operations.
 
 ## 5.1.1 [2010-02-04]
