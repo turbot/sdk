@@ -891,8 +891,8 @@ class Turbot {
           variables
         };
 
-        const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
-        self.log.info(msg, { data, turbotData });
+        const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
+        self.log.info(msg, { variables });
 
         self._command(command);
         return self;
@@ -960,8 +960,8 @@ class Turbot {
           variables
         };
 
-        const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parentId}.`;
-        self.log.info(msg, { data, turbotData });
+        const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
+        self.log.info(msg, { variables });
 
         self._command(command);
         return self;
@@ -1060,83 +1060,9 @@ class Turbot {
         };
 
         const msg = `put path resource ${command.variables.input.id}.`;
-        self.log.info(msg, { data, turbotData });
+        self.log.info(msg, { data, variables });
         self._command(command);
 
-        return self;
-      },
-
-      /***
-       * The fuzzy smart logic works as long as data is not a string. If data is a string
-       * pass the first three parameters
-       * resourceId/aka, path, data, turbotData <opt>
-       */
-      putPath_legacy: function(resourceId, path, data, turbotDataPath, turbotData) {
-        if (arguments.length < 2) {
-          throw new errors.badRequest("Path and data must be specified");
-        }
-
-        let id;
-
-        if (/^\d{15}$/.test(resourceId)) {
-          // If resourceId is 15 digit number then it's the resource id
-          id = resourceId;
-        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || path === null)) {
-          // two parameters: putPath('foo.bar',  { data: 'Object } )
-          // assume it's against the existing resource
-          id = self.meta.resourceId;
-          data = path;
-          path = resourceId;
-        } else if (
-          _.isString(resourceId) &&
-          _.isString(path) &&
-          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || data === null)
-        ) {
-          // Three parameters but the first one is aka
-
-          // This only works if all 5 parameters are supplied
-          id = null;
-          if (!turbotData) {
-            turbotData = {};
-          }
-
-          _.defaults(turbotData, { akas: [resourceId] });
-        } else if (!resourceId && path && data && !turbotDataPath && !turbotData) {
-          // three parameters: putPath(null, 'path.prop, { my: 'object' })
-          id = self.meta.resourceId;
-        } else if (arguments.length === 5 && !resourceId) {
-          // if we want to pass null in the first parameter then we need to pass all 5 parameters
-          id = self.meta.resourceId;
-        }
-
-        if (!id && !resourceId) {
-          throw new errors.badRequest("Unable to set id or aka for the putPath command");
-        }
-
-        // Do not check if data exist because we use null to indicate that
-        // we want to delete the given path
-        const command = {
-          type: "resource_putPath",
-          meta: {
-            resourceId: id,
-            path: path,
-            turbotDataPath: turbotDataPath
-          },
-          payload: {
-            data: data,
-            turbotData: turbotData
-          }
-        };
-
-        command.meta = self.setCommandMeta(command.meta, turbotData);
-        if (_.isPlainObject(turbotData)) {
-          command.payload.turbotData = _.omitBy(command.payload.turbotData, _.isNil);
-        }
-
-        // print aka or the id
-        const msg = "put path resource: " + (id || resourceId) + ".";
-        self.log.info(msg, { data, turbotData });
-        self._command(command);
         return self;
       },
 

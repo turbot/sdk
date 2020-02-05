@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.1.2 []
+
+- Fixed: incorrect log messages for resource operations.
+
 ## 5.1.1 [2010-02-04]
 
 - Fixed: create & update resource SDK API where the first parameter is the resource id.
