@@ -48,7 +48,7 @@ describe("@turbot/sdk", function() {
         turbot.policy.ok(value, "reason");
         const msg = turbot.asProcessEvent();
         assert.lengthOf(msg.payload.commands, 1);
-        assert.deepEqual(msg.payload.commands[0].payload.value, value);
+        assert.deepEqual(msg.payload.commands[0].payloadvalue, value);
         done();
       });
     });
