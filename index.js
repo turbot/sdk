@@ -1192,7 +1192,7 @@ class Turbot {
     }
 
     const capitalisedType = `${type.slice(0, 1).toUpperCase() + type.slice(1)}`;
-    const query = `mutation ${capitalisedType}PolicySetting($input: ${capitalisedType}PolicySettingInputs!) {
+    const query = `mutation ${capitalisedType}PolicySetting($input: ${capitalisedType}PolicySettingInput!) {
         ${type}PolicySetting(input: $input) {
           turbot {
             id
@@ -1220,7 +1220,7 @@ class Turbot {
       variables
     };
 
-    let msg = `${capitalisedType} policy ${policyTypeAka} for resource ${command.meta.resourceId}${
+    let msg = `${capitalisedType} policy ${policyTypeAka} for resource ${this.meta.resourceId}${
       value ? `: ${JSON.stringify(value)}` : ""
     }.`;
     this.log.info(msg, data);
@@ -1272,13 +1272,9 @@ class Turbot {
       },
 
       get setting() {
-        const self = this;
         return {
-          update: function(resourceId, policyTypeAka, value, opts) {
-            return self._policySettingGQL("update", resourceId, policyTypeAka, value, opts);
-          },
-          create: function(resourceId, policyTypeAka, value, opts) {
-            return self._policySettingGQL("create", resourceId, policyTypeAka, value, opts);
+          upsert: function(resourceId, policyTypeAka, value, opts) {
+            return self._policySettingGQL("upsert", resourceId, policyTypeAka, value, opts);
           }
         };
       }

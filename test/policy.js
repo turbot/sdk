@@ -4,6 +4,14 @@ const assert = chai.assert;
 
 describe("@turbot/sdk", function() {
   describe("policy", function() {
+    it("setting update", function() {
+      const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345 }, { type: "policy" });
+
+      turbot.policy.setting.update("crap", { foo: "bar" });
+      const msg = turbot.asProcessEvent();
+      assert.lengthOf(msg.payload.commands, 1);
+    });
+
     it("ok", function() {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, policyValueId: 123456789012346 },
