@@ -4,10 +4,10 @@ const assert = chai.assert;
 
 describe("@turbot/sdk", function() {
   describe("policy", function() {
-    it("setting update", function() {
+    it("setting upsert", function() {
       const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345 }, { type: "policy" });
 
-      turbot.policy.setting.update("crap", { foo: "bar" });
+      turbot.policy.setting.upsert("crap", { foo: "bar" });
       const msg = turbot.asProcessEvent();
       assert.lengthOf(msg.payload.commands, 1);
     });
