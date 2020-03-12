@@ -1220,10 +1220,7 @@ class Turbot {
       variables
     };
 
-    let msg = `${capitalisedType} policy ${policyTypeAka} for resource ${this.meta.resourceId}${
-      value ? `: ${JSON.stringify(value)}` : ""
-    }.`;
-    this.log.info(msg, data);
+    this.log.info(`${capitalisedType} policy ${policyTypeAka} for resource ${this.meta.resourceId}.`);
 
     this._command(command);
     return this;
