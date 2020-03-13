@@ -9,7 +9,7 @@ describe("@turbot/sdk control test", function() {
         { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
         { type: "control" }
       );
-      turbot.control.ok();
+      turbot.ok();
       const msg = turbot.asProcessEvent();
       assert.lengthOf(msg.payload.commands, 1);
     });
@@ -24,7 +24,7 @@ describe("@turbot/sdk control test", function() {
           { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
           { type: "control" }
         );
-        turbot.control[state]();
+        turbot[state]();
         const msg = turbot.asProcessEvent();
         assert.isArray(msg.payload.commands);
         assert.lengthOf(msg.payload.commands, 1);
@@ -61,7 +61,7 @@ describe("@turbot/sdk control test", function() {
           { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
           { type: "control" }
         );
-        turbot.control.ok(data);
+        turbot.ok(data);
 
         const msg = turbot.asProcessEvent();
         // console.log("msg.payload.commands", JSON.stringify(msg.payload.commands));

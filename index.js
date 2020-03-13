@@ -351,7 +351,7 @@ class Turbot {
     // For controls we want to be able to say:
     // turbot.ok('reason here');
     //
-    if (this.opts.type === "policy" && !data) {
+    if (this.opts.type === "policy" && (data === null || data === undefined)) {
       data = reason;
       reason = null;
     }

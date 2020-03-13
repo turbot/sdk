@@ -56,7 +56,7 @@ describe("@turbot/sdk", function() {
         turbot.policy.ok(value, "reason");
         const msg = turbot.asProcessEvent();
         assert.lengthOf(msg.payload.commands, 1);
-        assert.deepEqual(msg.payload.commands[0].payloadvalue, value);
+        assert.deepEqual(msg.payload.commands[0].variables.input.value, value);
         done();
       });
     });
@@ -92,8 +92,8 @@ describe("@turbot/sdk", function() {
       const msg = turbot.asProcessEvent();
       assert.lengthOf(msg.payload.commands, 1);
       const cmd = msg.payload.commands[0];
-      assert.deepEqual(msg.payload.commands[0].type, "policy_update");
-      assert.deepEqual(msg.payload.commands[0].payload.value, data);
+      assert.deepEqual(msg.payload.commands[0].type, "graphql");
+      assert.deepEqual(msg.payload.commands[0].variables.input.value, data);
     });
   });
 });

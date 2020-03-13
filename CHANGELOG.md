@@ -2,6 +2,12 @@
 
 # Release History
 
+## 5.2.1 [2020-03-13]
+
+- Fixed: turbot.policy.setting.upsert() SDK command.
+- Fixed: turbot.policy.ok(0) should return the value 0 instead of undefined (regression in v5.0.0).
+- Fixed: turbot.policy.ok(false) should return false in data field (regression in v5.0.0).
+
 ## 5.2.0 [2020-03-13]
 
 - Added: turbot.policy.setting.upsert() SDK command.
