@@ -4,6 +4,14 @@ const assert = chai.assert;
 
 describe("@turbot/sdk", function() {
   describe("policy", function() {
+    it("setting upsert", function() {
+      const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345 }, { type: "policy" });
+
+      turbot.policy.setting.upsert("crap", { foo: "bar" });
+      const msg = turbot.asProcessEvent();
+      assert.lengthOf(msg.payload.commands, 1);
+    });
+
     it("ok", function() {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, policyValueId: 123456789012346 },
@@ -48,7 +56,7 @@ describe("@turbot/sdk", function() {
         turbot.policy.ok(value, "reason");
         const msg = turbot.asProcessEvent();
         assert.lengthOf(msg.payload.commands, 1);
-        assert.deepEqual(msg.payload.commands[0].payload.value, value);
+        assert.deepEqual(msg.payload.commands[0].payloadvalue, value);
         done();
       });
     });

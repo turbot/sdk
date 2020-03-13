@@ -1178,7 +1178,7 @@ class Turbot {
     return this;
   }
 
-  _policyGQL(type, resourceId, policyTypeAka, value, opts) {
+  _policySettingGQL(type, resourceId, policyTypeAka, value, opts) {
     if (!/\d+/.test(resourceId)) {
       opts = value;
       value = policyTypeAka;
@@ -1190,35 +1190,29 @@ class Turbot {
       opts = value;
       value = undefined;
     }
-    // Create and put set the requirement to must by default. Update should not change the current setting.
-    var defaultOpts = {};
-    if (type !== "update") {
-      defaultOpts.requirement = "must";
-    }
-    var data = Object.assign(defaultOpts, opts);
-    if (value !== undefined) {
-      data.value = value;
-    }
 
-    let query;
-    if (type === "create") {
-      query = `mutation CreatePolicySetting($input: CreatePolicySettingInputs!) {
-        createPolicySetting(input: $input) {
+    const capitalisedType = `${type.slice(0, 1).toUpperCase() + type.slice(1)}`;
+    const query = `mutation ${capitalisedType}PolicySetting($input: ${capitalisedType}PolicySettingInput!) {
+        ${type}PolicySetting(input: $input) {
           turbot {
             id
           }
         }
       }`;
+
+    const data = Object.assign({}, opts);
+    if (value !== undefined) {
+      data.value = value;
     }
-
-    let variables = {
-      input: {
-        resource: resourceId,
-        type: policyTypeAka
-      }
+    const variables = {
+      input: Object.assign(
+        {
+          resource: resourceId,
+          type: policyTypeAka
+        },
+        data
+      )
     };
-
-    variables = Object.assign(variables, data);
 
     const command = {
       type: "graphql",
@@ -1226,34 +1220,15 @@ class Turbot {
       variables
     };
 
-    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${
-      command.meta.resourceId
-    } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
-    this.log.info(msg, data);
+    this.log.info(`${capitalisedType} policy ${policyTypeAka} for resource ${this.meta.resourceId}.`);
 
-    self._command(command);
-    return self;
+    this._command(command);
+    return this;
   }
 
   get policy() {
     const self = this;
     return {
-      /**
-       * policy settings commands are not yet supported
-      create: function(resourceId, policyTypeAka, value, opts) {
-        return self._policy("create", resourceId, policyTypeAka, value, opts);
-        //return self._policyGQL("create", resourceId, policyTypeAka, value, opts);
-      },
-
-      put: function(resourceId, policyTypeAka, value, opts) {
-        return self._policy("put", resourceId, policyTypeAka, value, opts);
-      },
-
-      update: function(resourceId, policyTypeAka, value, opts) {
-        return self._policy("update", resourceId, policyTypeAka, value, opts);
-      },
-      **/
-
       delete: function(resourceId, policyTypeAka) {
         if (!/\d+/.test(resourceId)) {
           policyTypeAka = resourceId;
@@ -1291,6 +1266,14 @@ class Turbot {
 
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
+      },
+
+      get setting() {
+        return {
+          upsert: function(resourceId, policyTypeAka, value, opts) {
+            return self._policySettingGQL("upsert", resourceId, policyTypeAka, value, opts);
+          }
+        };
       }
     };
   }
