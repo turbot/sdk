@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.2.0 [2020-03-13]
+
+- Added: turbot.policy.setting.upsert() SDK command.
+
 ## 5.1.2 [2020-02-05]
 
 - Updated: @turbot/utils to 5.0.6.
