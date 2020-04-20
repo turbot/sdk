@@ -448,6 +448,10 @@ class Turbot {
     return this._stateGQL(state, controlId, reason, data);
   }
 
+  set(property, data) {
+    this.cargoContainer[property] = data;
+  }
+
   ok(controlId, reason, data) {
     this.terminate();
     if (this.opts.type === "policy") {
@@ -624,6 +628,9 @@ class Turbot {
         });
       },
 
+      /**
+       * @deprecated use turbot.set('nextRun', data) instead.
+       */
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
       }
@@ -973,14 +980,7 @@ class Turbot {
       },
 
       /***
-       * The fuzzy smart logic works as long as data is not a string. If data is a string
-       * pass the first three parameters
-       * resourceId/aka, path, data, turbotData <opt>
-       *
-       * This needs refactoring so we have consistency with the rest of the functions.
-       *
-       * We probably should ditch the fuzzy logic and just pass object parameter
-       * to align with GraphQL pattern.
+       * @deprecated use putPaths instead.
        */
       putPath: function(resourceId, path, data, metadataPath, turbotData) {
         if (arguments.length < 2) {
@@ -1264,6 +1264,9 @@ class Turbot {
         return self._stateStager("error", reason, data);
       },
 
+      /**
+       * @deprecated use turbot.set('nextRun', data) instead.
+       */
       nextRun: function(data) {
         self.cargoContainer.nextRun = data;
       },
@@ -1564,6 +1567,10 @@ class CargoContainer {
 
     if (this.nextRun) {
       payload.nextRun = this.nextRun;
+    }
+
+    if (this.dependencies) {
+      payload.dependencies = this.dependencies;
     }
 
     event.type = `process.turbot.com:${this.phase}`;

@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.3.0 [2020-04-20]
+
+- Added: `turbot.set` command to set `nextRun` and `dependencies` instructions. Valid value for `nextRun` is a valid MomentJS duration object. Valid value for `dependencies` is `RECALCULATE`.
+
 ## 5.2.1 [2020-03-13]
 
 - Fixed: turbot.policy.setting.upsert() SDK command.
