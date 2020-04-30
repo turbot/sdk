@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.4.0 [2020-04-30]
+
+- Updated: @turbot/utils to 5.1.0, async to 3.2.0, uuid to 3.4.0. Various dev dependencies.
+
 ## 5.3.0 [2020-04-20]
 
 - Added: `turbot.set` command to set `nextRun` and `dependencies` instructions. Valid value for `nextRun` is a valid MomentJS duration object. Valid value for `dependencies` is `RECALCULATE`.
