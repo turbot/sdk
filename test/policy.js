@@ -2,9 +2,9 @@ const { Turbot } = require("../");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/sdk", function() {
-  describe("policy", function() {
-    it("setting upsert", function() {
+describe("@turbot/sdk", function () {
+  describe("policy", function () {
+    it("setting upsert", function () {
       const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345 }, { type: "policy" });
 
       turbot.policy.setting.upsert("crap", { foo: "bar" });
@@ -12,7 +12,7 @@ describe("@turbot/sdk", function() {
       assert.lengthOf(msg.payload.commands, 1);
     });
 
-    it("ok", function() {
+    it("ok", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, policyValueId: 123456789012346 },
         { type: "policy" }
@@ -23,7 +23,7 @@ describe("@turbot/sdk", function() {
     });
   });
 
-  describe("turbot policy value test", function() {
+  describe("turbot policy value test", function () {
     let x = 10;
     const values = [
       "one",
@@ -44,11 +44,11 @@ describe("@turbot/sdk", function() {
       [{ type: "aws", level: "admin" }],
       [{ type: "aws", level: "admin" }, [1, 2, 3]],
       [[1, 2, 3], { type: "aws", level: "admin" }],
-      0
+      0,
     ];
 
-    values.forEach(function(value) {
-      it(`turbot.policy.ok returns ${JSON.stringify(value)}`, function(done) {
+    values.forEach(function (value) {
+      it(`turbot.policy.ok returns ${JSON.stringify(value)}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, policyValueId: 123456789012346 },
           { type: "policy" }
@@ -80,8 +80,8 @@ describe("@turbot/sdk", function() {
   //   });
   // });
 
-  describe("turbot.ok true test", function() {
-    it("ok", function() {
+  describe("turbot.ok true test", function () {
+    it("ok", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, policyValueId: 123456789012346 },
         { type: "policy" }

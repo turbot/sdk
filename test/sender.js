@@ -3,10 +3,10 @@ const _ = require("lodash");
 const chai = require("chai");
 const assert = chai.assert;
 
-xdescribe("@turbot/inline", function() {
+xdescribe("@turbot/inline", function () {
   this.timeout(30000);
 
-  xit("Send test - not live", function() {
+  xit("Send test - not live", function () {
     const turbot = new Turbot({ snsArn: "sns:arn" });
 
     turbot.log.debug("foo", { content: "x" });
@@ -33,7 +33,7 @@ xdescribe("@turbot/inline", function() {
     console.log("ping ...", { content, opts });
   };
 
-  it("Send test - live", function(done) {
+  it("Send test - live", function (done) {
     const turbot = new Turbot({ live: true, snsArn: "sns:arn" }, { senderFunction: sender });
 
     turbot.log.debug("foo", { content: "x" });

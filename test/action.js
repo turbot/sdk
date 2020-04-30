@@ -2,9 +2,9 @@ const { Turbot } = require("../");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/sdk action test", function() {
-  describe("base test", function() {
-    it("run", function() {
+describe("@turbot/sdk action test", function () {
+  describe("base test", function () {
+    it("run", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, actionValueId: 123456789012346 },
         { type: "action" }
@@ -15,11 +15,11 @@ describe("@turbot/sdk action test", function() {
     });
   });
 
-  describe("turbot action state test", function() {
+  describe("turbot action state test", function () {
     const states = ["run"];
 
-    states.forEach(function(state) {
-      it(`turbot.${state} returns ${state}`, function(done) {
+    states.forEach(function (state) {
+      it(`turbot.${state} returns ${state}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, actionValueId: 123456789012346 },
           { type: "action" }
@@ -35,7 +35,7 @@ describe("@turbot/sdk action test", function() {
     });
   });
 
-  describe("turbot action value for run state test", function() {
+  describe("turbot action value for run state test", function () {
     let x = 10;
     const datas = [
       "one",
@@ -52,11 +52,11 @@ describe("@turbot/sdk action test", function() {
       x,
       [{ type: "aws", level: "admin" }],
       [{ type: "aws", level: "admin" }, [1, 2, 3]],
-      [[1, 2, 3], { type: "aws", level: "admin" }]
+      [[1, 2, 3], { type: "aws", level: "admin" }],
     ];
 
-    datas.forEach(function(data) {
-      it(`turbot.action.run returns ${JSON.stringify(data)}`, function(done) {
+    datas.forEach(function (data) {
+      it(`turbot.action.run returns ${JSON.stringify(data)}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, actionValueId: 123456789012346 },
           { type: "action" }
@@ -73,8 +73,8 @@ describe("@turbot/sdk action test", function() {
     });
   });
 
-  describe("base test", function() {
-    it("run", function() {
+  describe("base test", function () {
+    it("run", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, actionValueId: 123456789012346 },
         { type: "action" }

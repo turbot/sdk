@@ -2,8 +2,8 @@ const { Turbot } = require("../");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/sdk", function() {
-  it("setting state should fail after deleting a resource", function() {
+describe("@turbot/sdk", function () {
+  it("setting state should fail after deleting a resource", function () {
     const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
     turbot.resource.delete();
@@ -16,7 +16,7 @@ describe("@turbot/sdk", function() {
     assert.fail("turbot.ok should throw an exception");
   });
 
-  it("shouldn't be able to delete the same item twice", function() {
+  it("shouldn't be able to delete the same item twice", function () {
     const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
     turbot.resource.delete();
@@ -29,7 +29,7 @@ describe("@turbot/sdk", function() {
     assert.fail("second turbot.delete should throw an exception");
   });
 
-  it("shouldn't be able to delete the same item twice - in a series", function() {
+  it("shouldn't be able to delete the same item twice - in a series", function () {
     const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
 
     turbot.resource.delete();
@@ -44,7 +44,7 @@ describe("@turbot/sdk", function() {
   });
 });
 
-describe("@turbot/sdk - log sensitive exceptions", function() {
+describe("@turbot/sdk - log sensitive exceptions", function () {
   const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
   turbot.log.warning("Foo 1", { data: "bar" });
   turbot.log.warning("Foo 2", { data: "bar", key: "value" });
@@ -64,12 +64,12 @@ describe("@turbot/sdk - log sensitive exceptions", function() {
     { message: "Foo 2", expected: { key: "key", value: "<sensitive>" } },
     { message: "Foo 4", expected: { key: "password", value: "<sensitive>" } },
     { message: "Foo 5", expected: { key: "password", value: "myPassword" } },
-    { message: "Auto hide $ fields", expected: { key: "$hidden", value: "<sensitive>" } }
+    { message: "Auto hide $ fields", expected: { key: "$hidden", value: "<sensitive>" } },
   ];
 
-  turbot.cargoContainer.logEntries.map(l => {
+  turbot.cargoContainer.logEntries.map((l) => {
     it(`test for: ${l.message}`, () => {
-      const test = tests.filter(t => {
+      const test = tests.filter((t) => {
         return t.message === l.message;
       });
 
@@ -81,8 +81,8 @@ describe("@turbot/sdk - log sensitive exceptions", function() {
   });
 });
 
-describe("@turbot/sdk - notify", function() {
-  it("notify", function() {
+describe("@turbot/sdk - notify", function () {
+  it("notify", function () {
     const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
     turbot.notify("fal", "test", { my: "data" });
     const eventData = turbot.sendFinal();

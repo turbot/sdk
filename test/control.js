@@ -2,9 +2,9 @@ const { Turbot } = require("../");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/sdk control test", function() {
-  describe("base test", function() {
-    it("ok", function() {
+describe("@turbot/sdk control test", function () {
+  describe("base test", function () {
+    it("ok", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
         { type: "control" }
@@ -15,11 +15,11 @@ describe("@turbot/sdk control test", function() {
     });
   });
 
-  describe("turbot control state test", function() {
+  describe("turbot control state test", function () {
     const states = ["ok", "invalid", "tbd", "invalid"];
 
-    states.forEach(function(state) {
-      it(`turbot.${state} returns ${state}`, function(done) {
+    states.forEach(function (state) {
+      it(`turbot.${state} returns ${state}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
           { type: "control" }
@@ -35,7 +35,7 @@ describe("@turbot/sdk control test", function() {
     });
   });
 
-  describe("turbot control value for ok state test", function() {
+  describe("turbot control value for ok state test", function () {
     let x = 10;
     const datas = [
       // "one"
@@ -52,11 +52,11 @@ describe("@turbot/sdk control test", function() {
       x,
       [{ type: "aws", level: "admin" }],
       [{ type: "aws", level: "admin" }, [1, 2, 3]],
-      [[1, 2, 3], { type: "aws", level: "admin" }]
+      [[1, 2, 3], { type: "aws", level: "admin" }],
     ];
 
-    datas.forEach(function(data) {
-      it(`turbot.control.ok returns ${JSON.stringify(data)}`, function(done) {
+    datas.forEach(function (data) {
+      it(`turbot.control.ok returns ${JSON.stringify(data)}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
           { type: "control" }
@@ -73,8 +73,8 @@ describe("@turbot/sdk control test", function() {
     });
   });
 
-  describe("base test", function() {
-    it("ok", function() {
+  describe("base test", function () {
+    it("ok", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, controlValueId: 123456789012346 },
         { type: "control" }

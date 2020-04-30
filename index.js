@@ -163,7 +163,7 @@ class Turbot {
     const entry = {
       timestamp: new Date().toISOString(),
       level: level,
-      message: message || ""
+      message: message || "",
     };
 
     // use explicit undefined check rather than truthiness check as we want to allow zero/false values through
@@ -171,7 +171,7 @@ class Turbot {
 
     let loggingOptions = {
       breakCircular: true,
-      exceptions: this.sensitiveExceptions
+      exceptions: this.sensitiveExceptions,
     };
     loggingOptions = _.omitBy(loggingOptions, _.isNil);
     const logEntry = utils.data.sanitize(entry, loggingOptions);
@@ -184,25 +184,25 @@ class Turbot {
     const self = this;
     return {
       // NOTE: Turbot log levels (e.g. emergency, etc) are not available to controls.
-      error: function(message, data) {
+      error: function (message, data) {
         return self._logger("error", message, data);
       },
 
-      warning: function(message, data) {
+      warning: function (message, data) {
         return self._logger("warning", message, data);
       },
 
-      notice: function(message, data) {
+      notice: function (message, data) {
         return self._logger("notice", message, data);
       },
 
-      info: function(message, data) {
+      info: function (message, data) {
         return self._logger("info", message, data);
       },
 
-      debug: function(message, data) {
+      debug: function (message, data) {
         return self._logger("debug", message, data);
-      }
+      },
     };
   }
 
@@ -296,7 +296,7 @@ class Turbot {
     this._command({
       type: `${this.opts.type}_update`,
       meta: meta,
-      payload: newState
+      payload: newState,
     });
     return this;
   }
@@ -410,8 +410,8 @@ class Turbot {
             id: runnableId,
             value: data,
             state: state,
-            reason: reason
-          }
+            reason: reason,
+          },
         };
 
         break;
@@ -422,7 +422,7 @@ class Turbot {
     const command = {
       type: "graphql",
       query,
-      variables
+      variables,
     };
 
     this._command(command);
@@ -499,7 +499,7 @@ class Turbot {
       identityId: _.get(turbotData, "identityId", _.get(turbotData, "actorIdentityId")),
       personaId: _.get(turbotData, "personaId", _.get(turbotData, "actorPersonaId")),
       roleId: _.get(turbotData, "roleId", _.get(turbotData, "actorRoleId")),
-      alternatePersona: _.get(turbotData, "alternatePersona")
+      alternatePersona: _.get(turbotData, "alternatePersona"),
     });
 
     if (!input.actor.identityId && !input.actor.personaId && !input.actor.roleId && !input.actor.alternatePersona) {
@@ -507,7 +507,7 @@ class Turbot {
         identityId: this.meta.identityId || this.meta.actorIdentityId,
         personaId: this.meta.personaId || this.meta.actorPersonaId,
         roleId: this.meta.roleId || this.meta.actorRoleId,
-        alternatePersona: this.meta.alternatePersona
+        alternatePersona: this.meta.alternatePersona,
       });
     }
 
@@ -521,7 +521,7 @@ class Turbot {
       actorIdentityId: _.get(turbotData, "actorIdentityId"),
       actorPersonaId: _.get(turbotData, "actorPersonaId"),
       actorRoleId: _.get(turbotData, "actorRoleId"),
-      alternatePersona: _.get(turbotData, "alternatePersona")
+      alternatePersona: _.get(turbotData, "alternatePersona"),
     });
 
     // Don't chain two defaults here, because we may mix turbotData and the one from the event's meta.
@@ -531,7 +531,7 @@ class Turbot {
         actorIdentityId: this.meta.actorIdentityId,
         actorPersonaId: this.meta.actorPersonaId,
         actorRoleId: this.meta.actorRoleId,
-        alternatePersona: this.meta.alternatePersona
+        alternatePersona: this.meta.alternatePersona,
       });
     }
 
@@ -552,7 +552,7 @@ class Turbot {
   get action() {
     const self = this;
     return {
-      run: function(aka, actionUri, parameters) {
+      run: function (aka, actionUri, parameters) {
         // aka parameter is optional
         if (!parameters) {
           parameters = actionUri;
@@ -576,12 +576,12 @@ class Turbot {
           payload: {
             meta: {
               aka: aka,
-              actionUri: actionUri
+              actionUri: actionUri,
             },
-            data: parameters
-          }
+            data: parameters,
+          },
         });
-      }
+      },
     };
   }
 
@@ -594,7 +594,7 @@ class Turbot {
        *
        * turbot.control.run('my-aka', '#/control/types/cmdb', { foo: 'bar' })
        */
-      run: function(aka, controlUri, parameters) {
+      run: function (aka, controlUri, parameters) {
         // aka parameter is optional
         if (!parameters) {
           parameters = controlUri;
@@ -609,9 +609,9 @@ class Turbot {
         const payload = {
           meta: {
             controlUri: controlUri,
-            aka: aka
+            aka: aka,
           },
-          data: parameters
+          data: parameters,
         };
 
         let commandMeta = { controlId: self.meta.controlId, actionId: self.meta.actionId };
@@ -624,16 +624,16 @@ class Turbot {
         self._command({
           type: "control_run",
           meta: commandMeta,
-          payload: payload
+          payload: payload,
         });
       },
 
       /**
        * @deprecated use turbot.set('nextRun', data) instead.
        */
-      nextRun: function(data) {
+      nextRun: function (data) {
         self.cargoContainer.nextRun = data;
-      }
+      },
     };
   }
 
@@ -657,12 +657,12 @@ class Turbot {
       payload: {
         data: {
           icon,
-          message
+          message,
         },
         meta: {
           // This is the meta of the data that is being saved
-        }
-      }
+        },
+      },
     };
 
     // For this command the meta of the command and the meta of the data
@@ -760,8 +760,8 @@ class Turbot {
     const variables = {
       input: {
         id: id,
-        data: data
-      }
+        data: data,
+      },
     };
 
     _.merge(variables.input, turbotData);
@@ -782,7 +782,7 @@ class Turbot {
     const command = {
       type: "graphql",
       query,
-      variables
+      variables,
     };
 
     const msg = `${type} resource ${command.variables.input.id}.`;
@@ -815,12 +815,12 @@ class Turbot {
     const command = {
       type: "resource_" + type,
       meta: {
-        resourceId: id
+        resourceId: id,
       },
       payload: {
         data: data,
-        turbotData: turbotData
-      }
+        turbotData: turbotData,
+      },
     };
 
     command.meta = this.setCommandMeta(command.meta, turbotData);
@@ -836,7 +836,7 @@ class Turbot {
   get resource() {
     var self = this;
     return {
-      create: function(parentId, resourceTypeAka, data, turbotData) {
+      create: function (parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
         }
@@ -879,8 +879,8 @@ class Turbot {
           input: {
             parent: parentId,
             type: resourceTypeAka,
-            data: data
-          }
+            data: data,
+          },
         };
 
         _.merge(variables.input, turbotData);
@@ -895,7 +895,7 @@ class Turbot {
         const command = {
           type: "graphql",
           query,
-          variables
+          variables,
         };
 
         const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
@@ -905,7 +905,7 @@ class Turbot {
         return self;
       },
 
-      upsert: function(parentId, resourceTypeAka, data, turbotData) {
+      upsert: function (parentId, resourceTypeAka, data, turbotData) {
         if (!turbotData && !data && !resourceTypeAka) {
           throw new errors.badRequest("Resource Type AKA and Data are mandatory");
         }
@@ -948,8 +948,8 @@ class Turbot {
           input: {
             parent: parentId,
             type: resourceTypeAka,
-            data: data
-          }
+            data: data,
+          },
         };
 
         _.merge(variables.input, turbotData);
@@ -964,7 +964,7 @@ class Turbot {
         const command = {
           type: "graphql",
           query,
-          variables
+          variables,
         };
 
         const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
@@ -974,7 +974,7 @@ class Turbot {
         return self;
       },
 
-      put: function(resourceId, data, turbotData) {
+      put: function (resourceId, data, turbotData) {
         //return self._resource("put", resourceId, data, turbotData);
         return self._resourceGQL("put", resourceId, data, turbotData);
       },
@@ -982,7 +982,7 @@ class Turbot {
       /***
        * @deprecated use putPaths instead.
        */
-      putPath: function(resourceId, path, data, metadataPath, turbotData) {
+      putPath: function (resourceId, path, data, metadataPath, turbotData) {
         if (arguments.length < 2) {
           throw new errors.badRequest("Path and data must be specified");
         }
@@ -1030,8 +1030,8 @@ class Turbot {
         const variables = {
           input: {
             id: id,
-            data: data
-          }
+            data: data,
+          },
         };
 
         _.merge(variables.input, turbotData);
@@ -1056,7 +1056,7 @@ class Turbot {
         const command = {
           type: "graphql",
           query,
-          variables
+          variables,
         };
 
         const msg = `put path resource ${command.variables.input.id}.`;
@@ -1066,11 +1066,11 @@ class Turbot {
         return self;
       },
 
-      putPaths: function(resourceId, data, turbotData) {
+      putPaths: function (resourceId, data, turbotData) {
         return self._resourceGQL("putPaths", resourceId, data, turbotData);
       },
 
-      update: function(resourceId, data, turbotData) {
+      update: function (resourceId, data, turbotData) {
         return self._resourceGQL("update", resourceId, data, turbotData);
       },
 
@@ -1079,7 +1079,7 @@ class Turbot {
        * @param {*} resourceId resource id or aka. If not supplied the default control's resource will be
        * deleted.
        */
-      delete: function(resourceId) {
+      delete: function (resourceId) {
         if (!resourceId) {
           resourceId = self.meta.resourceId;
         }
@@ -1090,7 +1090,7 @@ class Turbot {
         return self;
       },
 
-      notify: function(resourceId, icon, message, data) {
+      notify: function (resourceId, icon, message, data) {
         if (!/\d+/.test(resourceId)) {
           data = message;
           message = icon;
@@ -1100,12 +1100,12 @@ class Turbot {
         const command = {
           type: "resource_notify",
           meta: {
-            resourceId
+            resourceId,
           },
           payload: {
             icon,
-            message
-          }
+            message,
+          },
         };
         if (data) {
           command.payload.data = data;
@@ -1113,27 +1113,27 @@ class Turbot {
         command.meta = self.setCommandMeta(command.meta, {});
         self._command(command);
         return self;
-      }
+      },
     };
   }
 
   get input() {
     var self = this;
     return {
-      set: function(path, value) {
+      set: function (path, value) {
         const command = {
           type: "input_set",
           meta: {},
           payload: {
             data: {
               path: path,
-              value: value
-            }
-          }
+              value: value,
+            },
+          },
         };
         self._command(command);
         return self;
-      }
+      },
     };
   }
 
@@ -1166,9 +1166,9 @@ class Turbot {
       type: "policy_" + type,
       meta: {
         resourceId,
-        type: policyTypeAka
+        type: policyTypeAka,
       },
-      payload: data
+      payload: data,
     };
     let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${
       command.meta.resourceId
@@ -1208,16 +1208,16 @@ class Turbot {
       input: Object.assign(
         {
           resource: resourceId,
-          type: policyTypeAka
+          type: policyTypeAka,
         },
         data
-      )
+      ),
     };
 
     const command = {
       type: "graphql",
       query,
-      variables
+      variables,
     };
 
     this.log.info(`${capitalisedType} policy ${policyTypeAka} for resource ${this.meta.resourceId}.`);
@@ -1229,7 +1229,7 @@ class Turbot {
   get policy() {
     const self = this;
     return {
-      delete: function(resourceId, policyTypeAka) {
+      delete: function (resourceId, policyTypeAka) {
         if (!/\d+/.test(resourceId)) {
           policyTypeAka = resourceId;
           resourceId = self.meta.resourceId;
@@ -1238,8 +1238,8 @@ class Turbot {
           type: "policy_delete",
           meta: {
             resourceId,
-            type: policyTypeAka
-          }
+            type: policyTypeAka,
+          },
         };
         let msg = `Delete policy ${policyTypeAka} for resource: ${command.meta.resourceId}`;
         self.log.info(msg);
@@ -1248,36 +1248,36 @@ class Turbot {
       },
 
       // policy state functions
-      ok: function(value) {
+      ok: function (value) {
         return self._stateStagerGQL("ok", "", value);
       },
 
-      tbd: function(reason, data) {
+      tbd: function (reason, data) {
         return self._stateStager("tbd", reason, data);
       },
 
-      invalid: function(reason, data) {
+      invalid: function (reason, data) {
         return self._stateStager("invalid", reason, data);
       },
 
-      error: function(reason, data) {
+      error: function (reason, data) {
         return self._stateStager("error", reason, data);
       },
 
       /**
        * @deprecated use turbot.set('nextRun', data) instead.
        */
-      nextRun: function(data) {
+      nextRun: function (data) {
         self.cargoContainer.nextRun = data;
       },
 
       get setting() {
         return {
-          upsert: function(resourceId, policyTypeAka, value, opts) {
+          upsert: function (resourceId, policyTypeAka, value, opts) {
             return self._policySettingGQL("upsert", resourceId, policyTypeAka, value, opts);
-          }
+          },
         };
-      }
+      },
     };
   }
 
@@ -1285,21 +1285,21 @@ class Turbot {
     const self = this;
     return {
       // report state functions
-      ok: function(value) {
+      ok: function (value) {
         return self._stateStager("ok", { value });
       },
 
-      tbd: function(reason, data) {
+      tbd: function (reason, data) {
         return self._stateStager("tbd", reason, data);
       },
 
-      invalid: function(reason, data) {
+      invalid: function (reason, data) {
         return self._stateStager("invalid", reason, data);
       },
 
-      error: function(reason, data) {
+      error: function (reason, data) {
         return self._stateStager("error", reason, data);
-      }
+      },
     };
   }
 
@@ -1310,7 +1310,7 @@ class Turbot {
   get grant() {
     const self = this;
     return {
-      delete: function(grantId, resourceId, profileId) {
+      delete: function (grantId, resourceId, profileId) {
         if (!/\d+/.test(grantId)) {
           throw new errors.badRequest("Grant Id must be specified.");
         }
@@ -1319,14 +1319,14 @@ class Turbot {
           meta: {
             resourceId,
             grantId,
-            profileId
-          }
+            profileId,
+          },
         };
         let msg = `Delete grant ${grantId} for resource: ${command.meta.resourceId} of profile: ${profileId}`;
         self.log.info(msg);
         self._command(command);
         return self;
-      }
+      },
     };
   }
 
@@ -1337,7 +1337,7 @@ class Turbot {
   get grantActivation() {
     const self = this;
     return {
-      delete: function(activeGrantId, resourceId) {
+      delete: function (activeGrantId, resourceId) {
         if (!/\d+/.test(activeGrantId)) {
           throw new errors.badRequest("Grant Activation Id must be specified.");
         }
@@ -1345,14 +1345,14 @@ class Turbot {
           type: "grantActivation_delete",
           meta: {
             resourceId,
-            activeGrantId
-          }
+            activeGrantId,
+          },
         };
         let msg = `Delete active grant ${activeGrantId} for resource: ${command.meta.resourceId}`;
         self.log.info(msg);
         self._command(command);
         return self;
-      }
+      },
     };
   }
 
@@ -1363,16 +1363,16 @@ class Turbot {
   get event() {
     const self = this;
     return {
-      raise: function(aka, eventType, event, turbotData, eventLockId) {
+      raise: function (aka, eventType, event, turbotData, eventLockId) {
         const command = {
           type: "event_raise",
           meta: {
             aka: aka,
             eventType: "event.turbot.com:External",
             eventRaw: eventType,
-            eventLockId: eventLockId
+            eventLockId: eventLockId,
           },
-          payload: event
+          payload: event,
         };
 
         command.meta = self.setCommandMeta(command.meta, turbotData);
@@ -1381,7 +1381,7 @@ class Turbot {
         self.log.info(msg, { event: event, turbotData: turbotData });
         self._command(command);
         return self;
-      }
+      },
     };
   }
 
@@ -1590,7 +1590,7 @@ class CargoContainer {
     const self = this;
 
     asyncjs.forever(
-      next => {
+      (next) => {
         if (self._stop) {
           return;
         }
@@ -1605,7 +1605,7 @@ class CargoContainer {
 
         _.delay(next, this.opts.delay);
       },
-      err => {
+      (err) => {
         self.log.error("Error in Cargo Container stream data", err);
       }
     );

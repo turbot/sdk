@@ -2,9 +2,9 @@ const { Turbot } = require("../");
 const chai = require("chai");
 const assert = chai.assert;
 
-describe("@turbot/sdk log test", function() {
-  describe("base test", function() {
-    it("info", function() {
+describe("@turbot/sdk log test", function () {
+  describe("base test", function () {
+    it("info", function () {
       const turbot = new Turbot(
         { snsArn: "sns:arn", resourceId: 123456789012345, logValueId: 123456789012346 },
         { type: "log" }
@@ -15,11 +15,11 @@ describe("@turbot/sdk log test", function() {
     });
   });
 
-  describe("turbot log level test", function() {
+  describe("turbot log level test", function () {
     const states = ["error", "warning", "notice", "info", "debug"];
 
-    states.forEach(function(level) {
-      it(`turbot.${level} returns ${level}`, function(done) {
+    states.forEach(function (level) {
+      it(`turbot.${level} returns ${level}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, logValueId: 123456789012346 },
           { type: "log" }
@@ -34,7 +34,7 @@ describe("@turbot/sdk log test", function() {
     });
   });
 
-  describe("turbot log level for info level test", function() {
+  describe("turbot log level for info level test", function () {
     let x = 10;
     const reasons = [
       "one",
@@ -54,11 +54,11 @@ describe("@turbot/sdk log test", function() {
       "",
       [{ type: "aws", level: "admin" }],
       [{ type: "aws", level: "admin" }, [1, 2, 3]],
-      [[1, 2, 3], { type: "aws", level: "admin" }]
+      [[1, 2, 3], { type: "aws", level: "admin" }],
     ];
 
-    reasons.forEach(function(reason) {
-      it(`turbot.log.info returns ${JSON.stringify(reason)}`, function(done) {
+    reasons.forEach(function (reason) {
+      it(`turbot.log.info returns ${JSON.stringify(reason)}`, function (done) {
         const turbot = new Turbot(
           { snsArn: "sns:arn", resourceId: 123456789012345, logValueId: 123456789012346 },
           { type: "log" }
