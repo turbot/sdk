@@ -2,7 +2,7 @@ const _ = require("lodash");
 const asyncjs = require("async");
 const errors = require("@turbot/errors");
 const utils = require("@turbot/utils");
-const uuidv4 = require("uuid/v4");
+const { v4: uuidv4 } = require("uuid");
 
 class Turbot {
   // TODO
@@ -898,8 +898,13 @@ class Turbot {
           variables,
         };
 
-        const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
-        self.log.info(msg, { variables });
+        if (command.variables.input.parent) {
+          const msg = `Create resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
+          self.log.info(msg, { variables });
+        } else {
+          const msg = `Create resource ${command.variables.input.type} with no parent.`;
+          self.log.info(msg, { variables });
+        }
 
         self._command(command);
         return self;
@@ -967,8 +972,13 @@ class Turbot {
           variables,
         };
 
-        const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
-        self.log.info(msg, { variables });
+        if (command.variables.input.parent) {
+          const msg = `Upsert resource ${command.variables.input.type} with parent: ${command.variables.input.parent}.`;
+          self.log.info(msg, { variables });
+        } else {
+          const msg = `Upsert resource ${command.variables.input.type} with no parent.`;
+          self.log.info(msg, { variables });
+        }
 
         self._command(command);
         return self;

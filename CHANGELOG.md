@@ -2,6 +2,11 @@
 
 # Release History
 
+## 5.5.0 [2020-06-22]
+
+- Updated: generated message for upsert and insert operation to be "no parent" instead of "parent: null".
+- Updated: uuid to 8.1.0
+
 ## 5.4.0 [2020-04-30]
 
 - Updated: @turbot/utils to 5.1.0, async to 3.2.0, uuid to 3.4.0. Various dev dependencies.
