@@ -2,6 +2,11 @@
 
 # Release History
 
+## 5.6.0 [2020-07-30]
+
+- Updated: disable live events.
+- Updated: lodash to 4.17.19, uuid to 8.3.0
+
 ## 5.5.0 [2020-06-22]
 
 - Updated: generated message for upsert and insert operation to be "no parent" instead of "parent: null".

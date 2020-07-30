@@ -5,18 +5,6 @@ const utils = require("@turbot/utils");
 const { v4: uuidv4 } = require("uuid");
 
 class Turbot {
-  // TODO
-  // Logging level in opts - don't log if lower than that.
-  // initialize
-  // finalize
-  // send results to S3 / SNS / ?
-  // database connection & query
-  // get install / env / tenant & function from event
-  // parameter loading
-  // Log basics about the function start / stop / tenant / etc
-  // Use memory cache with configurable cache expiration
-  // data key and decryption / aws credentials
-
   constructor(meta = {}, opts = {}) {
     this.meta = meta;
 
@@ -26,7 +14,7 @@ class Turbot {
     this.resourcesToBeDeleted = [];
     this.sensitiveExceptions = [];
 
-    // Setting this 1 second makes it losing messages
+    // Setting this to 1 second makes it losing messages
     _.defaults(this.opts, { type: "control", delay: 2000 });
 
     // Prefer the log level in opts rather than environment variable
@@ -37,9 +25,12 @@ class Turbot {
 
     this.cargoContainer = new CargoContainer(meta, opts);
 
-    if (this.meta.live && !this.opts.inline) {
-      this.cargoContainer.streamData();
-    }
+    // Disable live events
+    this.live = false;
+
+    // if (this.meta.live && !this.opts.inline) {
+    //   this.cargoContainer.streamData();
+    // }
   }
 
   stop() {
@@ -1428,7 +1419,10 @@ class CargoContainer {
     this.series = uuidv4();
     this.sequence = 0;
 
-    this.live = meta.live;
+    // Disable live events
+    this.live = false;
+
+    // this.live = meta.live;
     this.currentSize = 0;
 
     this.inline = opts.inline;
