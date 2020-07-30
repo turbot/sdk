@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.7.0 [2020-07-30]
+
+- Updated: @turbot/errors to 5.1.0. @turbot/utils to 5.2.0. Various dev dependencies. #32.
+
 ## 5.6.0 [2020-07-30]
 
 - Updated: disable live events.
