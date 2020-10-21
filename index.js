@@ -84,9 +84,6 @@ class Turbot {
   //
 
   _process(state) {
-    if (this.process) {
-      this.log.debug(`Process state previously set to: ${this.process.state}. Resetting.`, this.process);
-    }
     this.process = { state, timestamp: new Date() };
     this.log.debug(`Setting process state: ${this.process.state}.`, this.process);
   }
@@ -1438,6 +1435,11 @@ class CargoContainer {
   }
 
   log(logEntry) {
+    if (this.largeCommandState === "finalised") {
+      console.log("Cargo state has been finalised, sending log entry to console log");
+      return;
+    }
+
     let stringOutput = JSON.stringify(logEntry);
     let size = Buffer.byteLength(stringOutput);
 
@@ -1480,6 +1482,10 @@ class CargoContainer {
   }
 
   command(command) {
+    if (this.largeCommandState === "finalised") {
+      throw new errors.badRequest("Cargo state has been finalised, unable to add command", { command });
+    }
+
     let stringOutput = JSON.stringify(command);
     let size = Buffer.byteLength(stringOutput);
 

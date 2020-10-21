@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.7.1 [2020-10-22]
+
+- Fixed: should not modify the cargo content after it has been finalized for sending it back to Turbot server.
+
 ## 5.7.0 [2020-07-30]
 
 - Updated: @turbot/errors to 5.1.0. @turbot/utils to 5.2.0. Various dev dependencies. #32.
