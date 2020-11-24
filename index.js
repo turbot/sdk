@@ -580,9 +580,9 @@ class Turbot {
        * aka parameter is optional
        * example:
        *
-       * turbot.control.run('my-aka', '#/control/types/cmdb', { foo: 'bar' })
+       * turbot.control.run('my-aka', '#/control/types/cmdb', { foo: 'bar' }, turbotData)
        */
-      run: function (aka, controlUri, parameters) {
+      run: function (aka, controlUri, parameters, turbotData) {
         // aka parameter is optional
         if (!parameters) {
           parameters = controlUri;
@@ -607,7 +607,7 @@ class Turbot {
           commandMeta.parentProcessId = self.meta.pid;
         }
 
-        commandMeta = self.setCommandMeta(commandMeta, {});
+        commandMeta = self.setCommandMeta(commandMeta, turbotData);
 
         self._command({
           type: "control_run",
@@ -1436,7 +1436,7 @@ class CargoContainer {
 
   log(logEntry) {
     if (this.largeCommandState === "finalised") {
-      console.log("Cargo state has been finalised, sending log entry to console log");
+      console.log("Cargo state has been finalised, log entry will not be added to the payload");
       return;
     }
 
@@ -1466,7 +1466,7 @@ class CargoContainer {
     // If by adding this log entry we will breach the size, send immediately whatever we have in the buffer and only then add the log entries
     if (this.metaSize + size + this.currentSize > 250000) {
       if (this.opts.inline) {
-        throw errors.internal("Inline payload too large", { size: size + this.currentSize });
+        throw errors.internal("Inline payload too large (from log)", { size: size + this.currentSize });
       }
 
       if (!this.live) {
@@ -1540,7 +1540,7 @@ class CargoContainer {
       // Do not allow to send during inline execution, this should never happen though
       // if the command sizing is correct
       if (this.opts.inline) {
-        throw errors.internal("Inline payload too large. ", { size: size + this.currentSize });
+        throw errors.internal("Inline payload too large (from command). ", { size: size + this.currentSize });
       }
 
       this.send();

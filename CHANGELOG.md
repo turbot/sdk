@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.8.0 [2020-11-24]
+
+- Added: functionality to set the actor for `turbot.control.run`
+
 ## 5.7.1 [2020-10-22]
 
 - Fixed: should not modify the cargo content after it has been finalized for sending it back to Turbot server.
