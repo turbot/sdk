@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.9.0 [2020-12-01]
+
+- Added: turbot.action.handleEvent() for launching an action to handle an external event.
+
 ## 5.8.0 [2020-11-24]
 
 - Added: functionality to set the actor for `turbot.control.run`
