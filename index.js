@@ -553,7 +553,13 @@ class Turbot {
         }
 
         // TODO: the actionUri should be in the payload not meta. See how the control.run is done
-        const meta = { controlId: self.meta.controlId, actionUri: actionUri };
+        const meta = {
+          controlId: self.meta.controlId,
+          actionId: self.meta.actionId,
+          actionUri: actionUri,
+          sourceType: self.opts.type,
+          sourceRunnableTypeUri: self.meta.runnableTypeUri,
+        };
         if (self.meta.pid) {
           meta.parentProcessId = self.meta.pid;
         }
@@ -569,6 +575,37 @@ class Turbot {
             data: parameters,
           },
         });
+      },
+
+      handleEvent: function (aka, actionUri, eventType, event, turbotData) {
+        const command = {
+          type: "action_run",
+          meta: {
+            controlId: self.meta.controlId,
+            actionId: self.meta.actionId,
+            sourceType: self.opts.type,
+            sourceRunnableTypeUri: self.meta.runnableTypeUri,
+            actionRunType: "handleEvent",
+            aka,
+            eventType: "event.turbot.com:External",
+            eventRaw: eventType,
+            actionUri,
+          },
+          payload: {
+            meta: {
+              aka: aka,
+              actionUri: actionUri,
+            },
+            data: event,
+          },
+        };
+
+        command.meta = self.setCommandMeta(command.meta, turbotData);
+
+        const msg = `Handle event for aka ${aka}.`;
+        self.log.info(msg, { event: event, turbotData: turbotData });
+        self._command(command);
+        return self;
       },
     };
   }
@@ -1365,10 +1402,10 @@ class Turbot {
         const command = {
           type: "event_raise",
           meta: {
-            aka: aka,
+            aka,
             eventType: "event.turbot.com:External",
             eventRaw: eventType,
-            eventLockId: eventLockId,
+            eventLockId,
           },
           payload: event,
         };
