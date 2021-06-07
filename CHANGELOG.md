@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.10.0 [2021-06-07]
+
+- Updated: @turbot/errors to 5.2.0. @turbot/utils to 5.3.0. uuid to 8.3.2. Various dev dependencies.
+
 ## 5.9.0 [2020-12-01]
 
 - Added: turbot.action.handleEvent() for launching an action to handle an external event.
