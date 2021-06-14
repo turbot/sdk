@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.11.0 [2021-06-15]
+
+- Added: turbot.action.run() new parameter format to support action locking.
+
 ## 5.10.0 [2021-06-07]
 
 - Updated: @turbot/errors to 5.2.0. @turbot/utils to 5.3.0. uuid to 8.3.2. Various dev dependencies.
