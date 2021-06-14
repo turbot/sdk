@@ -541,6 +541,39 @@ class Turbot {
     const self = this;
     return {
       run: function (aka, actionUri, parameters) {
+        // If the first parameter is a plain object, we switch to the "new" parameter format:
+        //
+        // { aka, actionUri, parameters, lock }
+        //
+        if (_.isPlainObject(aka)) {
+          const { aka2, actionUri, parameters, lock, lockExpireSecs } = aka;
+          const meta = {
+            controlId: self.meta.controlId,
+            actionId: self.meta.actionId,
+            actionUri: actionUri,
+            sourceType: self.opts.type,
+            sourceRunnableTypeUri: self.meta.runnableTypeUri,
+            lock: lock,
+            lockExpireSecs: lockExpireSecs,
+          };
+          if (self.meta.pid) {
+            meta.parentProcessId = self.meta.pid;
+          }
+
+          self._command({
+            type: "action_run",
+            meta: meta,
+            payload: {
+              meta: {
+                aka: aka2,
+                actionUri: actionUri,
+              },
+              data: parameters,
+            },
+          });
+          return;
+        }
+
         // aka parameter is optional
         if (!parameters) {
           parameters = actionUri;
