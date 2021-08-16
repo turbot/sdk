@@ -4,7 +4,7 @@
 
 ## 5.12.0 [2021-08-16]
 
-- Updated: reduce the maximum individual log entry to 100kb from 200kb.
+- Updated: reduce the maximum individual log entry to ~100kb from ~200kb.
 
 ## 5.11.0 [2021-06-15]
 
