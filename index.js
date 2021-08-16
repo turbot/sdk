@@ -1514,7 +1514,7 @@ class CargoContainer {
     let size = Buffer.byteLength(stringOutput);
 
     // Need to include the meta size as at minimum we need to send the meta size too
-    if (this.metaSize + size > 200000) {
+    if (this.metaSize + size > 100000) {
       if (_.isString(logEntry.message)) {
         logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 1024) + ". Size: " + size;
       } else {
@@ -1534,7 +1534,7 @@ class CargoContainer {
     }
 
     // If by adding this log entry we will breach the size, send immediately whatever we have in the buffer and only then add the log entries
-    if (this.metaSize + size + this.currentSize > 250000) {
+    if (this.metaSize + size + this.currentSize > 225000) {
       if (this.opts.inline) {
         throw errors.internal("Inline payload too large (from log)", { size: size + this.currentSize });
       }

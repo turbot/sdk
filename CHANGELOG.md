@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.12.0 [2021-08-16]
+
+- Updated: reduce the maximum individual log entry to 100kb from 200kb.
+
 ## 5.11.0 [2021-06-15]
 
 - Added: turbot.action.run() new parameter format to support action locking.
