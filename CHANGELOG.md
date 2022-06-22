@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.13.0 [2022-06-22]
+
+- Updated: @turbot/utils to 5.5.0. async to ^3.2.4.
+
 ## 5.12.0 [2021-08-16]
 
 - Updated: reduce the maximum individual log entry to ~100kb from ~200kb.
