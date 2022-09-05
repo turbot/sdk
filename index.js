@@ -1454,6 +1454,101 @@ class Turbot {
   }
 
   //
+  // MESSAGE
+  //
+
+  get message() {
+    return {
+      send: function (messageData, opts, callback) {
+        asyncjs.auto(
+          {
+            sendMessagetoSlack: [
+              (cb) => {
+                // TODO: this should be determined from the messageData (which is $) NOT opts
+                if (!opts.notificationsSlack) {
+                  return cb(null, null);
+                }
+
+                const quickActionOptions = "Test Quick action 1";
+                const checkAlarmPayload = [
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: `<${messageData.turbotWorkspaceUrl}/resources/${messageData.resourceId}|*${messageData.resourceTrunkTitle}*>\n\n_${messageData.controlReason}_`,
+                    },
+                    accessory: {
+                      type: "button",
+                      text: {
+                        type: "plain_text",
+                        text: "Alarm",
+                      },
+                      style: "danger",
+                      url: `${messageData.turbotWorkspaceUrl}/controls/${messageData.controlId}`,
+                    },
+                  },
+                  {
+                    type: "context",
+                    elements: [
+                      {
+                        type: "mrkdwn",
+                        text: `Quick actions for ${messageData.controlTrunkTitle}:\n${quickActionOptions}`,
+                      },
+                    ],
+                  },
+                ];
+                const data = JSON.stringify({
+                  blocks: checkAlarmPayload,
+                });
+
+                const hostname = messageData.slackWebhookUrl;
+
+                const options = {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                };
+
+                const req = https.request(hostname, options, (res) => {
+                  res.on("data", (d) => {
+                    console.log(d);
+                  });
+                });
+
+                req.on("error", (err) => {
+                  return cb(err);
+                });
+
+                req.write(data);
+                return cb(null, req.end());
+              },
+            ],
+            sendEmail: [
+              (cb) => {
+                console.log("Send email here");
+                return cb();
+              },
+            ],
+            sendTeam: [
+              (cb) => {
+                console.log("Send MSFT Team here");
+                return cb();
+              },
+            ],
+          },
+          (err) => {
+            if (err) {
+              console.log("Error in send function", err);
+            }
+            callback(err, "result from callback");
+          }
+        );
+      },
+    };
+  }
+
+  //
   // COMMANDS
   //
 
