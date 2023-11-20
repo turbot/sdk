@@ -136,7 +136,7 @@ Examples:
 
 | State    | Description                                                          |
 | -------- | -------------------------------------------------------------------- |
-| create   | It Creates the watch                                                 |
+| create   | It creates the watch                                                 |
 | delete   | It deletes the watch                                                 |
 
 Examples:
