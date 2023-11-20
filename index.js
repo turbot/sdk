@@ -1206,6 +1206,97 @@ class Turbot {
   }
 
   //
+  // Watches
+  //
+
+  get watch() {
+    var self = this;
+    return {
+      create: function (resourceId, filters, action) {
+        if (!resourceId && !filters && !action) {
+          throw new errors.badRequest("Resource, filters and handler are mandatory");
+        }
+
+        if (!resourceId) {
+          throw new errors.badRequest("Resource cannot be empty");
+        }
+
+        // Filters is an array
+        if (_.isEmpty(filters)) {
+          throw new errors.badRequest("Filters cannot be empty");
+        }
+
+        if (!action) {
+          throw new errors.badRequest("Handlers cannot be empty");
+        }
+
+        // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
+
+        const command = {
+          type: "watch_create",
+          meta: {
+            resourceId,
+          },
+          payload: {
+            data: {
+              handler: {
+                action,
+              },
+              resourceId,
+              filters: Array.isArray(filters) ? filters : [filters],
+            },
+            turbotData: {},
+          },
+        };
+
+        command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+
+        let msg = `Watch created on resource ${resourceId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+
+      /**
+       * Delete watch by id.
+       * @param {*} watchId. If not supplied deletion will fail.
+       */
+      delete: function (watchId) {
+        if (!watchId) {
+          throw new errors.badRequest("Watch ID cannot be empty");
+        }
+
+        if (!/^\d{15}$/.test(watchId)) {
+          throw new errors.badRequest("Watch ID is not valid");
+        }
+        const command = {
+          type: "watch_delete",
+          meta: {
+            resourceId: self.meta.resourceId,
+          },
+          payload: {
+            data: {
+              watchId,
+            },
+            turbotData: {},
+          },
+        };
+
+        command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+
+        let msg = `Watch deleted on resource ${self.meta.resourceId} with watch id ${watchId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+    };
+  }
+
+  //
   // POLICIES
   //
 
