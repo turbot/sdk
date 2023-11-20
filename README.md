@@ -106,7 +106,7 @@ Examples:
 ### Resource
 
 - turbot.resource.create(parentId, resourceTypeAka, data, turbotData)
-- turbot.resource.upsert(parentId, resourceTypeAka, data, turbotData))
+- turbot.resource.upsert(parentId, resourceTypeAka, data, turbotData)
 - turbot.resource.put(resourceId,data, turbotData)
 - turbot.resource.putPath(resourceId, path, data, turbotDataPath, turbotData)
 - turbot.resource.putPaths(resourceId,data, turbotData)
@@ -128,6 +128,22 @@ Examples:
 - turbot.resource.putPaths(result, turbotData);
 - turbot.resource.update({ title: ‘New title’ });
 - turbot.resource.delete(resourceId);
+
+### Watch
+
+- turbot.watch.create(resourceId, filters, action)
+- turbot.watch.delete(watchId)
+
+| State    | Description                                                          |
+| -------- | -------------------------------------------------------------------- |
+| create   | It Creates the watch                                                 |
+| delete   | It deletes the watch                                                 |
+
+Examples:
+
+- turbot.watch.delete(227139196406160, [ "level:self,descendant notificationType:resource_deleted" ], "tmod:@turbot/aws-s3#/action/types/bucketDelete");
+- turbot.watch.delete(304627475971091);
+
 
 ### Action
 
