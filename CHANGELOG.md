@@ -4,7 +4,7 @@
 
 ## 5.14.0 [tbd]
 
-- Added: Support for watch create and delele.
+- Added: Support for watch create and delete.
 
 ## 5.13.0 [2022-06-22]
 
