@@ -2,9 +2,10 @@
 
 # Release History
 
-## 5.14.0 [tbd]
+## 5.14.0 [2023-11-21]
 
 - Added: Support for watch create and delete.
+- Updated: @turbot/errors to 5.3.0. @turbot/utils to 5.6.0. async to 3.2.5. Various dev dependencies.
 
 ## 5.13.0 [2022-06-22]
 
