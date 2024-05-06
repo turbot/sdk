@@ -1329,8 +1329,9 @@ class Turbot {
       },
       payload: data,
     };
-    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${command.meta.resourceId
-      } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
+    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${
+      command.meta.resourceId
+    } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
     this.log.info(msg, data);
     this._command(command);
     return this;
@@ -1529,7 +1530,7 @@ class Turbot {
             eventType: "event.turbot.com:External",
             eventRaw: eventType,
             eventLockId,
-            messageGroupId
+            messageGroupId,
           },
           payload: event,
         };
