@@ -2,6 +2,11 @@
 
 # Release History
 
+
+## 5.15.0 [2024-05-06]
+
+- Added FIFO queue handling for the event_raise command to ensure events are processed in the order
+
 ## 5.14.0 [2023-11-21]
 
 - Added: Support for watch create and delete.
