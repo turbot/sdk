@@ -141,7 +141,7 @@ Examples:
 
 Examples:
 
-- turbot.watch.delete(227139196406160, [ "level:self,descendant notificationType:resource_deleted" ], "tmod:@turbot/aws-s3#/action/types/bucketDelete");
+- turbot.watch.create(227139196406160, [ "level:self,descendant notificationType:resource_deleted" ], "tmod:@turbot/aws-s3#/action/types/bucketDelete");
 - turbot.watch.delete(304627475971091);
 
 ### Action
