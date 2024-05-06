@@ -1522,7 +1522,7 @@ class Turbot {
   get event() {
     const self = this;
     return {
-      raise: function (aka, eventType, event, turbotData, eventLockId) {
+      raise: function (aka, eventType, event, turbotData, eventLockId, messageGroupId) {
         const command = {
           type: "event_raise",
           meta: {
@@ -1530,6 +1530,7 @@ class Turbot {
             eventType: "event.turbot.com:External",
             eventRaw: eventType,
             eventLockId,
+            messageGroupId,
           },
           payload: event,
         };
