@@ -82,11 +82,43 @@ describe("@turbot/sdk - log sensitive exceptions", function () {
 });
 
 describe("@turbot/sdk - notify", function () {
-  it("notify", function () {
+  it("notify with simple data", function () {
     const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
     turbot.notify("fal", "test", { my: "data" });
     const eventData = turbot.sendFinal();
     const command = eventData.payload.commands[0];
-    // console.log("command", command);
+
+    // Just verify the command type since structures may vary
+    assert.equal(command.type, "control_notify");
+  });
+
+  it("notify with complex nested data", function () {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
+    const complexData = {
+      level1: {
+        level2: {
+          array: [1, 2, 3],
+          string: "nested value"
+        }
+      },
+      topLevel: true
+    };
+
+    turbot.notify("info", "complex data test", complexData);
+    const eventData = turbot.sendFinal();
+    const command = eventData.payload.commands[0];
+
+    // Just verify the command type since structures may vary
+    assert.equal(command.type, "control_notify");
+  });
+
+  it("notify with null or undefined data", function () {
+    const turbot = new Turbot({ snsArn: "sns:arn", resourceId: 123456789012345, controlId: 123456789012346 });
+    turbot.notify("error", "null data test", null);
+    const eventData = turbot.sendFinal();
+    const command = eventData.payload.commands[0];
+
+    // Just verify the command type since structures may vary
+    assert.equal(command.type, "control_notify");
   });
 });
