@@ -1297,6 +1297,68 @@ class Turbot {
   }
 
   //
+  // Rules
+  //
+
+  get rule() {
+    var self = this;
+    return {
+      create: function (sourceResourceId, data, meta) {
+        if (!sourceResourceId && !data && !meta) {
+          throw new errors.badRequest("Source Resource ID and Data are mandatory");
+        }
+
+        if (!sourceResourceId) {
+          throw new errors.badRequest("Source Resource ID cannot be empty");
+        }
+
+        // Filters is an array
+        if (_.isEmpty(data)) {
+          throw new errors.badRequest("Data cannot be empty");
+        }
+
+        // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
+
+        const command = {
+          type: "rule_create",
+          meta: {
+            sourceResourceId,
+          },
+          payload: {
+            data: data,
+            turbotData: meta || {},
+          },
+        };
+
+        // command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+        let msg = `Rule created on resource ${sourceResourceId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+
+      delete: function (ruleIds) {
+        const command = {
+          type: "rule_delete",
+          meta: {
+            ruleIds,
+          },
+        };
+
+        if (!Array.isArray(ruleIds)) {
+          ruleIds = [ruleIds];
+        }
+
+        let msg = `Delete rules ${ruleIds.join(", ")}`;
+        self.log.info(msg);
+        self._command(command);
+        return self;
+      },
+    };
+  }
+  //
   // POLICIES
   //
 
@@ -1329,8 +1391,9 @@ class Turbot {
       },
       payload: data,
     };
-    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${command.meta.resourceId
-      } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
+    let msg = `${type.slice(0, 1).toUpperCase() + type.slice(1)} policy ${policyTypeAka} for resource ${
+      command.meta.resourceId
+    } as ${command.payload.requirement}: ${JSON.stringify(value)}.`;
     this.log.info(msg, data);
     this._command(command);
     return this;
@@ -1529,7 +1592,7 @@ class Turbot {
             eventType: "event.turbot.com:External",
             eventRaw: eventType,
             eventLockId,
-            messageGroupId
+            messageGroupId,
           },
           payload: event,
         };
