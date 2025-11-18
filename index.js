@@ -1339,6 +1339,42 @@ class Turbot {
         return self;
       },
 
+      update: function (ruleId, data, meta) {
+        if (!ruleId && !data && !meta) {
+          throw new errors.badRequest("Rule ID and Data are mandatory");
+        }
+
+        if (!ruleId) {
+          throw new errors.badRequest("Source Resource ID cannot be empty");
+        }
+
+        // Filters is an array
+        if (_.isEmpty(data)) {
+          throw new errors.badRequest("Data cannot be empty");
+        }
+
+        // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
+
+        const command = {
+          type: "rule_update",
+          meta: {
+            ruleId,
+          },
+          payload: {
+            data: data,
+            turbotData: meta || {},
+          },
+        };
+
+        // command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+        let msg = `Rule updated on resource ${ruleId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+
       delete: function (ruleIds) {
         const command = {
           type: "rule_delete",
