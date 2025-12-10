@@ -2,7 +2,7 @@
   "name": "@turbot/sdk",
   "author": "Turbot HQ, Inc",
   "description": "Turbot SDK",
-  "version": "5.16.0-rc.2",
+  "version": "5.16.0-rc.3",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

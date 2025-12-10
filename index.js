@@ -1299,7 +1299,7 @@ class Turbot {
   //
   // Rules
   //
-
+  // Deprecated pelase use prevention instead.
   get rule() {
     var self = this;
     return {
@@ -1388,6 +1388,101 @@ class Turbot {
         }
 
         let msg = `Delete rules ${ruleIds.join(", ")}`;
+        self.log.info(msg);
+        self._command(command);
+        return self;
+      },
+    };
+  }
+
+  get prevention() {
+    var self = this;
+    return {
+      create: function (sourceResourceId, data, meta) {
+        if (!sourceResourceId && !data && !meta) {
+          throw new errors.badRequest("Source Resource ID and Data are mandatory");
+        }
+
+        if (!sourceResourceId) {
+          throw new errors.badRequest("Source Resource ID cannot be empty");
+        }
+
+        // Filters is an array
+        if (_.isEmpty(data)) {
+          throw new errors.badRequest("Data cannot be empty");
+        }
+
+        // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
+
+        const command = {
+          type: "rule_create",
+          meta: {
+            sourceResourceId,
+          },
+          payload: {
+            data: data,
+            turbotData: meta || {},
+          },
+        };
+
+        // command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+        let msg = `Rule created on resource ${sourceResourceId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+
+      update: function (preventionId, data, meta) {
+        if (!preventionId && !data && !meta) {
+          throw new errors.badRequest("Prevention ID and Data are mandatory");
+        }
+
+        if (!preventionId) {
+          throw new errors.badRequest("Source Resource ID cannot be empty");
+        }
+
+        // Filters is an array
+        if (_.isEmpty(data)) {
+          throw new errors.badRequest("Data cannot be empty");
+        }
+
+        // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
+
+        const command = {
+          type: "prevention_update",
+          meta: {
+            preventionId,
+          },
+          payload: {
+            data: data,
+            turbotData: meta || {},
+          },
+        };
+
+        // command.meta = self.setCommandMeta(command.meta, {});
+        command.payload = _.omitBy(command.payload, _.isNil);
+        let msg = `Prevention updated on resource ${preventionId}`;
+        self.log.info(msg, { data: command.payload.data });
+        self._command(command);
+
+        return self;
+      },
+
+      delete: function (preventionIds) {
+        const command = {
+          type: "prevention_delete",
+          meta: {
+            preventionIds,
+          },
+        };
+
+        if (!Array.isArray(preventionIds)) {
+          preventionIds = [preventionIds];
+        }
+
+        let msg = `Delete preventions ${preventionIds.join(", ")}`;
         self.log.info(msg);
         self._command(command);
         return self;
