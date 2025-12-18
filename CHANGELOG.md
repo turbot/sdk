@@ -4,7 +4,7 @@
 
 ## 5.16.0 [2024-12-18]
 
-- Added support for prevention.
+- Added support for prevention types.
 
 ## 5.15.0 [2024-05-06]
 
