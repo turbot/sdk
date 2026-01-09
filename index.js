@@ -1,8 +1,60 @@
-const _ = require("lodash");
-const asyncjs = require("async");
 const errors = require("@turbot/errors");
 const utils = require("@turbot/utils");
 const { v4: uuidv4 } = require("uuid");
+
+// Utility helpers (replacing lodash)
+const isPlainObject = (val) => typeof val === "object" && val !== null && val.constructor === Object;
+
+const isEmpty = (val) => {
+  if (val == null) return true;
+  if (Array.isArray(val) || typeof val === "string") return val.length === 0;
+  if (typeof val === "object") return Object.keys(val).length === 0;
+  return false;
+};
+
+const get = (obj, path, defaultValue) => {
+  if (obj == null) return defaultValue;
+  const keys = typeof path === "string" ? path.split(".") : path;
+  let result = obj;
+  for (const key of keys) {
+    if (result == null) return defaultValue;
+    result = result[key];
+  }
+  return result === undefined ? defaultValue : result;
+};
+
+const defaults = (target, ...sources) => {
+  const result = { ...target };
+  for (const source of sources) {
+    if (source) {
+      for (const key of Object.keys(source)) {
+        if (result[key] === undefined) {
+          result[key] = source[key];
+        }
+      }
+    }
+  }
+  return result;
+};
+
+const omitNil = (obj) => {
+  if (obj == null) return {};
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null));
+};
+
+const deepMerge = (target, source) => {
+  const result = { ...target };
+  if (source && typeof source === "object" && !Array.isArray(source)) {
+    for (const key of Object.keys(source)) {
+      if (isPlainObject(source[key]) && isPlainObject(result[key])) {
+        result[key] = deepMerge(result[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+  return result;
+};
 
 class Turbot {
   constructor(meta = {}, opts = {}) {
@@ -15,7 +67,7 @@ class Turbot {
     this.sensitiveExceptions = [];
 
     // Setting this to 1 second makes it losing messages
-    _.defaults(this.opts, { type: "control", delay: 2000 });
+    this.opts = defaults(this.opts, { type: "control", delay: 2000 });
 
     // Prefer the log level in opts rather than environment variable
     this.logLevel = opts.logLevel || process.env.TURBOT_LOG_LEVEL;
@@ -111,11 +163,11 @@ class Turbot {
     }
 
     let aka =
-      _.get(data, "meta.aka") ||
-      _.get(data, "meta.resourceId") ||
-      _.get(data, "payload.meta.aka") ||
-      _.get(data, "payload.meta.resourceId") ||
-      _.get(data, "payload.turbotData.akas[0]");
+      get(data, "meta.aka") ||
+      get(data, "meta.resourceId") ||
+      get(data, "payload.meta.aka") ||
+      get(data, "payload.meta.resourceId") ||
+      get(data, "payload.turbotData.akas.0");
 
     if (data.type && data.type.endsWith("_update")) {
       // Control/action/policy update operation does not set the resourceId in the meta
@@ -139,12 +191,12 @@ class Turbot {
   _logger(level, message, data) {
     // If we only pass 2 parameters and the the message is passed as the error object for example
     // message will be "" and we get the object within the 'data' field
-    if (!data && !_.isString(message)) {
+    if (!data && typeof message !== "string") {
       data = message;
       message = null;
     }
 
-    if (!_.isPlainObject(data)) {
+    if (!isPlainObject(data)) {
       data = { data: data };
     }
 
@@ -161,7 +213,7 @@ class Turbot {
       breakCircular: true,
       exceptions: this.sensitiveExceptions,
     };
-    loggingOptions = _.omitBy(loggingOptions, _.isNil);
+    loggingOptions = omitNil(loggingOptions);
     const logEntry = utils.data.sanitize(entry, loggingOptions);
 
     this.cargoContainer.log(logEntry);
@@ -264,7 +316,7 @@ class Turbot {
             newState.details = data.details;
             delete data.details;
           }
-          if (data.reason && _.isEmpty(newState.reason)) {
+          if (data.reason && isEmpty(newState.reason)) {
             newState.reason = data.reason;
             delete data.reason;
           }
@@ -273,7 +325,7 @@ class Turbot {
         break;
       case "policy":
         meta.policyValueId = runnableId;
-        if (!_.isNil(data)) {
+        if (data != null) {
           newState.value = data;
         }
         break;
@@ -377,7 +429,7 @@ class Turbot {
             newState.details = data.details;
             delete data.details;
           }
-          if (data.reason && _.isEmpty(newState.reason)) {
+          if (data.reason && isEmpty(newState.reason)) {
             newState.reason = data.reason;
             delete data.reason;
           }
@@ -483,15 +535,15 @@ class Turbot {
     }
 
     // This is for backward compatibility with the mods
-    input.actor = _.defaults(input.actor, {
-      identityId: _.get(turbotData, "identityId", _.get(turbotData, "actorIdentityId")),
-      personaId: _.get(turbotData, "personaId", _.get(turbotData, "actorPersonaId")),
-      roleId: _.get(turbotData, "roleId", _.get(turbotData, "actorRoleId")),
-      alternatePersona: _.get(turbotData, "alternatePersona"),
+    input.actor = defaults(input.actor, {
+      identityId: get(turbotData, "identityId", get(turbotData, "actorIdentityId")),
+      personaId: get(turbotData, "personaId", get(turbotData, "actorPersonaId")),
+      roleId: get(turbotData, "roleId", get(turbotData, "actorRoleId")),
+      alternatePersona: get(turbotData, "alternatePersona"),
     });
 
     if (!input.actor.identityId && !input.actor.personaId && !input.actor.roleId && !input.actor.alternatePersona) {
-      input.actor = _.defaults(input.actor, {
+      input.actor = defaults(input.actor, {
         identityId: this.meta.identityId || this.meta.actorIdentityId,
         personaId: this.meta.personaId || this.meta.actorPersonaId,
         roleId: this.meta.roleId || this.meta.actorRoleId,
@@ -499,23 +551,23 @@ class Turbot {
       });
     }
 
-    input.actor = _.omitBy(input.actor, _.isNil);
+    input.actor = omitNil(input.actor);
     return input;
   }
 
   setCommandMeta(meta, turbotData) {
     // Prefer the setup in TurbotData
-    meta = _.defaults(meta, {
-      actorIdentityId: _.get(turbotData, "actorIdentityId"),
-      actorPersonaId: _.get(turbotData, "actorPersonaId"),
-      actorRoleId: _.get(turbotData, "actorRoleId"),
-      alternatePersona: _.get(turbotData, "alternatePersona"),
+    meta = defaults(meta, {
+      actorIdentityId: get(turbotData, "actorIdentityId"),
+      actorPersonaId: get(turbotData, "actorPersonaId"),
+      actorRoleId: get(turbotData, "actorRoleId"),
+      alternatePersona: get(turbotData, "alternatePersona"),
     });
 
     // Don't chain two defaults here, because we may mix turbotData and the one from the event's meta.
 
     if (!meta.actorIdentityId && !meta.actorPersonaId && !meta.actorRoleId && !meta.alternatePersona) {
-      meta = _.defaults(meta, {
+      meta = defaults(meta, {
         actorIdentityId: this.meta.actorIdentityId,
         actorPersonaId: this.meta.actorPersonaId,
         actorRoleId: this.meta.actorRoleId,
@@ -523,7 +575,7 @@ class Turbot {
       });
     }
 
-    meta = _.omitBy(meta, _.isNil);
+    meta = omitNil(meta);
     return meta;
   }
 
@@ -545,7 +597,7 @@ class Turbot {
         //
         // { aka, actionUri, parameters, lock }
         //
-        if (_.isPlainObject(aka)) {
+        if (isPlainObject(aka)) {
           const { aka2, actionUri, parameters, lock, lockExpireSecs } = aka;
           const meta = {
             controlId: self.meta.controlId,
@@ -774,13 +826,13 @@ class Turbot {
     if (/^\d{15}$/.test(resourceId)) {
       // If resourceId is 15 digit number then it's the resource id
       id = resourceId;
-    } else if (_.isPlainObject(resourceId)) {
+    } else if (isPlainObject(resourceId)) {
       // if the resource id is a plain object, that's the data
       // and id is the meta.resourceId
       turbotData = data;
       data = resourceId;
       id = this.meta.resourceId;
-    } else if (_.isString(resourceId)) {
+    } else if (typeof resourceId === "string") {
       // Assume resource id is aka. In GraphQL world we say the first element can be id or aka
       id = resourceId;
     }
@@ -822,9 +874,9 @@ class Turbot {
       },
     };
 
-    _.merge(variables.input, turbotData);
+    Object.assign(variables.input, turbotData);
     if (!variables.input.metadata) {
-      variables.input.metadata = _.get(turbotData, "custom");
+      variables.input.metadata = get(turbotData, "custom");
     }
 
     // Backward compatibility
@@ -856,18 +908,18 @@ class Turbot {
     if (/^\d{15}$/.test(resourceId)) {
       // If resourceId is 15 digit number then it's the resource id
       id = resourceId;
-    } else if (_.isPlainObject(resourceId)) {
+    } else if (isPlainObject(resourceId)) {
       // if the resource id is a plain object, that's the data
       // and id is the meta.resourceId
       turbotData = data;
       data = resourceId;
       id = this.meta.resourceId;
-    } else if (_.isString(resourceId)) {
+    } else if (typeof resourceId === "string") {
       id = null;
       if (!turbotData) {
         turbotData = {};
       }
-      _.defaults(turbotData, { akas: [resourceId] });
+      turbotData = defaults(turbotData, { akas: [resourceId] });
     }
 
     const command = {
@@ -882,7 +934,7 @@ class Turbot {
     };
 
     command.meta = this.setCommandMeta(command.meta, turbotData);
-    command.payload = _.omitBy(command.payload, _.isNil);
+    command.payload = omitNil(command.payload);
 
     let msg = type.slice(0, 1).toUpperCase() + type.slice(1) + " resource: " + command.meta.resourceId + ".";
     this.log.info(msg, { data, turbotData });
@@ -912,7 +964,7 @@ class Turbot {
         } else if (!turbotData) {
           // Here we have three parameters so we have to do some guesswork what is the
           // intention of the mod developer
-          if (!/^\d{15}$/.test(parentId) && _.isString(parentId)) {
+          if (!/^\d{15}$/.test(parentId) && typeof parentId === "string") {
             // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
             turbotData = data;
             data = resourceTypeAka;
@@ -941,9 +993,9 @@ class Turbot {
           },
         };
 
-        _.merge(variables.input, turbotData);
+        Object.assign(variables.input, turbotData);
         if (!variables.input.metadata) {
-          variables.input.metadata = _.get(turbotData, "custom");
+          variables.input.metadata = get(turbotData, "custom");
         }
 
         delete variables.input.custom;
@@ -986,7 +1038,7 @@ class Turbot {
         } else if (!turbotData) {
           // Here we have three parameters so we have to do some guesswork what is the
           // intention of the mod developer
-          if (!/^\d{15}$/.test(parentId) && _.isString(parentId)) {
+          if (!/^\d{15}$/.test(parentId) && typeof parentId === "string") {
             // ('#/resource/types/foo', { body: 'is here' }, { akas: [] });
             turbotData = data;
             data = resourceTypeAka;
@@ -1015,9 +1067,9 @@ class Turbot {
           },
         };
 
-        _.merge(variables.input, turbotData);
+        Object.assign(variables.input, turbotData);
         if (!variables.input.metadata) {
-          variables.input.metadata = _.get(turbotData, "custom");
+          variables.input.metadata = get(turbotData, "custom");
         }
 
         delete variables.input.custom;
@@ -1060,16 +1112,16 @@ class Turbot {
         if (/^\d{15}$/.test(resourceId)) {
           // If resourceId is 15 digit number then it's the resource id
           id = resourceId;
-        } else if (_.isString(resourceId) && (_.isPlainObject(path) || Array.isArray(path) || path === null)) {
+        } else if (typeof resourceId === "string" && (isPlainObject(path) || Array.isArray(path) || path === null)) {
           // two parameters: putPath('foo.bar',  { data: 'Object } )
           // assume it's against the existing resource
           id = self.meta.resourceId;
           data = path;
           path = resourceId;
         } else if (
-          _.isString(resourceId) &&
-          _.isString(path) &&
-          (_.isPlainObject(data) || _.isString(data) || Array.isArray(data) || data === null)
+          typeof resourceId === "string" &&
+          typeof path === "string" &&
+          (isPlainObject(data) || typeof data === "string" || Array.isArray(data) || data === null)
         ) {
           // Three parameters but the first one is aka
 
@@ -1102,9 +1154,9 @@ class Turbot {
           },
         };
 
-        _.merge(variables.input, turbotData);
+        Object.assign(variables.input, turbotData);
         if (!variables.input.metadata) {
-          variables.input.metadata = _.get(turbotData, "custom");
+          variables.input.metadata = get(turbotData, "custom");
         }
 
         // Backward compatibility
@@ -1222,7 +1274,7 @@ class Turbot {
         }
 
         // Filters is an array
-        if (_.isEmpty(filters)) {
+        if (isEmpty(filters)) {
           throw new errors.badRequest("Filters cannot be empty");
         }
 
@@ -1250,7 +1302,7 @@ class Turbot {
         };
 
         command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
 
         let msg = `Watch created on resource ${resourceId}`;
         self.log.info(msg, { data: command.payload.data });
@@ -1285,7 +1337,7 @@ class Turbot {
         };
 
         command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
 
         let msg = `Watch deleted on resource ${self.meta.resourceId} with watch id ${watchId}`;
         self.log.info(msg, { data: command.payload.data });
@@ -1313,7 +1365,7 @@ class Turbot {
         }
 
         // Filters is an array
-        if (_.isEmpty(data)) {
+        if (isEmpty(data)) {
           throw new errors.badRequest("Data cannot be empty");
         }
 
@@ -1331,7 +1383,7 @@ class Turbot {
         };
 
         // command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
         let msg = `Rule created on resource ${sourceResourceId}`;
         self.log.info(msg, { data: command.payload.data });
         self._command(command);
@@ -1349,7 +1401,7 @@ class Turbot {
         }
 
         // Filters is an array
-        if (_.isEmpty(data)) {
+        if (isEmpty(data)) {
           throw new errors.badRequest("Data cannot be empty");
         }
 
@@ -1367,7 +1419,7 @@ class Turbot {
         };
 
         // command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
         let msg = `Rule updated on resource ${ruleId}`;
         self.log.info(msg, { data: command.payload.data });
         self._command(command);
@@ -1408,7 +1460,7 @@ class Turbot {
         }
 
         // Filters is an array
-        if (_.isEmpty(data)) {
+        if (isEmpty(data)) {
           throw new errors.badRequest("Data cannot be empty");
         }
 
@@ -1426,7 +1478,7 @@ class Turbot {
         };
 
         // command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
         let msg = `Rule created on resource ${sourceResourceId}`;
         self.log.info(msg, { data: command.payload.data });
         self._command(command);
@@ -1444,7 +1496,7 @@ class Turbot {
         }
 
         // Filters is an array
-        if (_.isEmpty(data)) {
+        if (isEmpty(data)) {
           throw new errors.badRequest("Data cannot be empty");
         }
 
@@ -1462,7 +1514,7 @@ class Turbot {
         };
 
         // command.meta = self.setCommandMeta(command.meta, {});
-        command.payload = _.omitBy(command.payload, _.isNil);
+        command.payload = omitNil(command.payload);
         let msg = `Prevention updated on resource ${preventionId}`;
         self.log.info(msg, { data: command.payload.data });
         self._command(command);
@@ -1800,7 +1852,7 @@ class CargoContainer {
 
     // Need to include the meta size as at minimum we need to send the meta size too
     if (this.metaSize + size > 100000) {
-      if (_.isString(logEntry.message)) {
+      if (typeof logEntry.message === "string") {
         logEntry.message = "Log item too large. Message: " + logEntry.message.slice(0, 1024) + ". Size: " + size;
       } else {
         logEntry.message = "[Log item too large - no message supplied]. Size: " + size;
@@ -1808,7 +1860,7 @@ class CargoContainer {
 
       // At one stage we have an error, tried to log the error but the data object too big.
       // This is not ideal, but will get us through, as long as the message is only nested 1 level.
-      const nestedMessage = _.get(logEntry, "data.error.message");
+      const nestedMessage = get(logEntry, "data.error.message");
       if (nestedMessage) {
         logEntry.message += ". Nested message: " + nestedMessage.slice(0, 1024);
       }
@@ -1954,26 +2006,23 @@ class CargoContainer {
   streamData() {
     const self = this;
 
-    asyncjs.forever(
-      (next) => {
-        if (self._stop) {
-          return;
-        }
-
-        // If there's nothing don't send because we're just polluting the event bus
-        // initially we were thinking of a "heartbeat" to indicate that the process
-        // is still working. But this is not implemented yet and the effect of sending this
-        // heartbeats is unnecessary messages in the event bus
-        if (!_.isEmpty(this.logEntries) || !_.isEmpty(this.commands)) {
-          self.send();
-        }
-
-        _.delay(next, this.opts.delay);
-      },
-      (err) => {
-        self.log.error("Error in Cargo Container stream data", err);
+    const loop = () => {
+      if (self._stop) {
+        return;
       }
-    );
+
+      // If there's nothing don't send because we're just polluting the event bus
+      // initially we were thinking of a "heartbeat" to indicate that the process
+      // is still working. But this is not implemented yet and the effect of sending this
+      // heartbeats is unnecessary messages in the event bus
+      if (!isEmpty(this.logEntries) || !isEmpty(this.commands)) {
+        self.send();
+      }
+
+      setTimeout(loop, this.opts.delay);
+    };
+
+    loop();
   }
 
   send(callback) {
