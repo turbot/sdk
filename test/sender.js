@@ -1,5 +1,4 @@
 const { Turbot } = require("../");
-const _ = require("lodash");
 const chai = require("chai");
 const assert = chai.assert;
 
@@ -41,7 +40,7 @@ xdescribe("@turbot/inline", function () {
 
     turbot.resource.upsert("aka:foo", { title: "bar" }, { akas: [1234, "fo"] });
 
-    _.delay(() => {
+    setTimeout(() => {
       turbot.stop();
 
       turbot.send(true);
