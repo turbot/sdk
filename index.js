@@ -1415,7 +1415,7 @@ class Turbot {
         // return self._watch("create", resource, filters.isArray() ? filters : [filters], action);
 
         const command = {
-          type: "rule_create",
+          type: "prevention_create",
           meta: {
             sourceResourceId,
           },
@@ -1427,7 +1427,7 @@ class Turbot {
 
         // command.meta = self.setCommandMeta(command.meta, {});
         command.payload = _.omitBy(command.payload, _.isNil);
-        let msg = `Rule created on resource ${sourceResourceId}`;
+        let msg = `Prevention created on resource ${sourceResourceId}`;
         self.log.info(msg, { data: command.payload.data });
         self._command(command);
 
