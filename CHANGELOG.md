@@ -2,6 +2,10 @@
 
 # Release History
 
+## 5.16.1 [2026-03-19]
+
+- Fixed: `prevention.create` now uses the correct command type and log message.
+
 ## 5.16.0 [2024-12-18]
 
 - Added support for prevention types.
